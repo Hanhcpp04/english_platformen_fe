@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-kumbh: "Kumbh Sans", sans-serif;
+  --font-montserrat: "Montserrat", sans-serif;
+  --color-primary: #e43131;
+  --color-secondary: #f7f7f7;
+  --color-bg-primary: #f7f7f7;
+  --color-bg-secondary: #6C6D70;
+  
+  --animate-fade-in: fadeIn 0.2s ease-out;
+  --animate-slide-in: slideIn 0.3s ease-out;
+  --animate-slide-out: slideOut 0.3s ease-in;
+}
+
+@layer utilities {
+  .font-kumbh {
+    font-family: var(--font-kumbh);
+  }
+  .font-montserrat {
+    font-family: var(--font-montserrat);
+  }
+  .text-primary {
+    color: var(--color-primary);
+  }
+  .text-secondary {
+    color: var(--color-secondary);
+  }
+  .bg-primary {
+    background-color: var(--color-bg-primary);
+  }
+  .bg-secondary {
+    background-color: var(--color-bg-secondary);
+  }
+  .my-icon:hover {
+    color: var(--color-primary);
+    cursor: pointer;
+    transition-duration: 400ms;
+  }
+  .popUp:hover {
+    background-color: #e9ecef;
+  }
+  .animate-fade-in {
+    animation: var(--animate-fade-in);
+  }
+  .animate-slide-in {
+    animation: var(--animate-slide-in);
+  }
+  .animate-slide-out {
+    animation: var(--animate-slide-out);
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #fed7aa #fef3e2;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #fef3e2;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #fed7aa;
+    border-radius: 10px;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-black text-white rounded-md text-base md:text-xl cursor-pointer hover:bg-red-600 transition-all duration-500;
+  }
+  .btn-secondary {
+    @apply bg-black text-white cursor-pointer hover:bg-white hover:text-black transition-all duration-300 rounded-tr-2xl rounded-bl-2xl border border-black;
+  }
+  .top-menu-item {
+    @apply hover:text-red-500 relative after:absolute after:bottom-0 after:left-0 after:bg-red-500 after:h-0.5 after:w-0 hover:after:w-full after:transition-all after:ease-in-out after:duration-300;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes fade-in {
+  from { 
+    opacity: 0; 
+    transform: translateY(-20px);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
