@@ -1,0 +1,312 @@
+NỀN TẢNG HỌC TIẾNG ANH THÔNG MINH - TÀI LIỆU CÁC TRƯỜNG HỢP SỬ DỤNG
+=====================================================================
+
+1. QUẢN LÝ NGƯỜI DÙNG
+=====================
+
+UC001: Đăng ký người dùng
+- Tác nhân: Người dùng mới
+- Mô tả: Người dùng tạo tài khoản mới bằng email/mật khẩu hoặc đăng nhập xã hội
+- Điều kiện tiên quyết: Người dùng có địa chỉ email hợp lệ
+- Luồng:
+  1. Người dùng cung cấp tên đăng nhập, email, họ tên, mật khẩu
+  2. Hệ thống xác thực email và tên đăng nhập duy nhất
+  3. Hệ thống tạo tài khoản người dùng với vai trò mặc định 'USER'
+  4. Người dùng nhận xác nhận
+- Luồng thay thế: Đăng ký bằng Google/Facebook OAuth
+
+UC002: Xác thực người dùng
+- Tác nhân: Người dùng đã đăng ký
+- Mô tả: Người dùng đăng nhập vào hệ thống
+- Luồng:
+  1. Người dùng nhập email/tên đăng nhập và mật khẩu
+  2. Hệ thống xác thực thông tin đăng nhập
+  3. Hệ thống cấp quyền truy cập và tạo phiên làm việc
+- Luồng thay thế: Đăng nhập bằng Google/Facebook
+
+UC003: Quản lý hồ sơ
+- Tác nhân: Người dùng
+- Mô tả: Người dùng cập nhật thông tin cá nhân và avatar
+- Luồng:
+  1. Người dùng truy cập cài đặt hồ sơ
+  2. Người dùng chỉnh sửa họ tên, avatar, hoặc thông tin khác
+  3. Hệ thống cập nhật thông tin người dùng
+
+UC004: Quản lý người dùng (Admin)
+- Tác nhân: Admin
+- Mô tả: Admin quản lý tài khoản và vai trò người dùng
+- Luồng:
+  1. Admin xem danh sách người dùng
+  2. Admin có thể kích hoạt/vô hiệu hóa người dùng
+  3. Admin có thể thay đổi vai trò người dùng
+
+2. HỌC TỪ VỰNG
+==============
+
+UC005: Duyệt chủ đề từ vựng
+- Tác nhân: Người dùng
+- Mô tả: Người dùng khám phá các chủ đề từ vựng có sẵn
+- Luồng:
+  1. Người dùng xem danh sách các chủ đề từ vựng đang hoạt động
+  2. Hệ thống hiển thị tên chủ đề, mô tả, tổng số từ, phần thưởng XP
+  3. Người dùng chọn chủ đề để học
+
+UC006: Học từ vựng bằng thẻ nhớ
+- Tác nhân: Người dùng
+- Mô tả: Người dùng học từ vựng bằng phương pháp thẻ nhớ
+- Luồng:
+  1. Người dùng chọn chủ đề từ vựng
+  2. Hệ thống trình bày từ với nghĩa, phát âm, ví dụ
+  3. Người dùng đánh dấu từ đã học
+  4. Hệ thống theo dõi tiến độ và trao XP
+
+UC007: Làm bài tập từ vựng
+- Tác nhân: Người dùng
+- Mô tả: Người dùng luyện tập từ vựng qua các loại bài tập khác nhau
+- Luồng:
+  1. Người dùng chọn loại bài tập trong chủ đề
+  2. Hệ thống trình bày câu hỏi (trắc nghiệm, điền từ, v.v.)
+  3. Người dùng nộp bài
+  4. Hệ thống cung cấp phản hồi và theo dõi độ chính xác
+  5. Hệ thống trao XP cho câu trả lời đúng
+
+UC008: Theo dõi tiến độ từ vựng
+- Tác nhân: Người dùng
+- Mô tả: Người dùng theo dõi tiến độ học từ vựng
+- Luồng:
+  1. Người dùng xem bảng điều khiển tiến độ
+  2. Hệ thống hiển thị từ đã hoàn thành, chủ đề, tỷ lệ chính xác
+  3. Hệ thống hiển thị XP kiếm được từ hoạt động từ vựng
+
+3. HỌC NGỮ PHÁP
+===============
+
+UC009: Duyệt chủ đề ngữ pháp
+- Tác nhân: Người dùng
+- Mô tả: Người dùng khám phá các chủ đề và bài học ngữ pháp
+- Luồng:
+  1. Người dùng xem các chủ đề ngữ pháp có sẵn
+  2. Người dùng chọn chủ đề để xem các bài học liên quan
+  3. Hệ thống hiển thị tiêu đề bài học và trạng thái tiến độ
+
+UC010: Học lý thuyết ngữ pháp
+- Tác nhân: Người dùng
+- Mô tả: Người dùng đọc nội dung bài học ngữ pháp
+- Luồng:
+  1. Người dùng chọn bài học ngữ pháp
+  2. Hệ thống hiển thị nội dung lý thuyết
+  3. Người dùng đánh dấu bài học đã hoàn thành
+  4. Hệ thống trao XP và cập nhật tiến độ
+
+UC011: Luyện tập bài tập ngữ pháp
+- Tác nhân: Người dùng
+- Mô tả: Người dùng luyện tập ngữ pháp qua bài tập
+- Luồng:
+  1. Người dùng hoàn thành bài học lý thuyết ngữ pháp
+  2. Người dùng làm bài tập ngữ pháp liên quan
+  3. Hệ thống trình bày câu hỏi dựa trên nội dung bài học
+  4. Người dùng nộp bài và nhận phản hồi
+  5. Hệ thống theo dõi độ chính xác và trao XP
+
+UC012: Theo dõi tiến độ ngữ pháp
+- Tác nhân: Người dùng
+- Mô tả: Người dùng theo dõi tiến độ học ngữ pháp
+- Luồng:
+  1. Người dùng xem tóm tắt tiến độ ngữ pháp
+  2. Hệ thống hiển thị bài học đã hoàn thành, bài tập, điểm số
+  3. Hệ thống hiển thị XP kiếm được từ ngữ pháp
+
+4. KỸ NĂNG VIẾT
+===============
+
+UC013: Duyệt danh mục viết
+- Tác nhân: Người dùng
+- Mô tả: Người dùng khám phá các danh mục luyện viết khác nhau
+- Luồng:
+  1. Người dùng xem các danh mục viết có sẵn
+  2. Hệ thống hiển thị mô tả danh mục, mẹo, gợi ý mẫu
+  3. Người dùng chọn danh mục để luyện tập
+
+UC014: Luyện tập viết
+- Tác nhân: Người dùng
+- Mô tả: Người dùng hoàn thành bài tập viết
+- Luồng:
+  1. Người dùng chọn đề bài viết hoặc tạo tiêu đề tùy chỉnh
+  2. Người dùng viết nội dung phản hồi đề bài
+  3. Hệ thống tự động đếm từ trong quá trình viết
+  4. Người dùng nộp bài viết hoàn thành
+
+UC015: Nhận phản hồi AI
+- Tác nhân: Người dùng
+- Mô tả: Người dùng nhận phản hồi tự động về bài viết
+- Luồng:
+  1. Người dùng nộp bài viết hoàn thành
+  2. Hệ thống AI phân tích ngữ pháp, từ vựng, tính mạch lạc
+  3. Hệ thống cung cấp điểm số (0-100) cho từng khía cạnh
+  4. Hệ thống đưa ra gợi ý cụ thể để cải thiện
+  5. Người dùng xem xét phản hồi và học từ gợi ý
+
+UC016: Theo dõi tiến độ viết
+- Tác nhân: Người dùng
+- Mô tả: Người dùng theo dõi sự phát triển kỹ năng viết
+- Luồng:
+  1. Người dùng xem lịch sử viết và điểm số
+  2. Hệ thống hiển thị xu hướng cải thiện theo thời gian
+  3. Hệ thống hiển thị XP và thành tích liên quan đến viết
+
+5. DIỄN ĐÀN CỘNG ĐỒNG
+=====================
+
+UC017: Tạo bài viết diễn đàn
+- Tác nhân: Người dùng
+- Mô tả: Người dùng chia sẻ nội dung với cộng đồng
+- Luồng:
+  1. Người dùng tạo bài viết mới với tiêu đề và nội dung
+  2. Người dùng có thể thêm tệp đính kèm phương tiện
+  3. Hệ thống xuất bản bài viết và trao XP
+  4. Người dùng khác có thể xem và tương tác với bài viết
+
+UC018: Bình luận bài viết
+- Tác nhân: Người dùng
+- Mô tả: Người dùng tham gia thảo luận
+- Luồng:
+  1. Người dùng xem bài viết diễn đàn
+  2. Người dùng viết bình luận hoặc trả lời bình luận hiện có
+  3. Hệ thống đăng bình luận và thông báo cho người dùng liên quan
+  4. Hệ thống hỗ trợ chuỗi bình luận lồng nhau
+
+UC019: Thích bài viết và bình luận
+- Tác nhân: Người dùng
+- Mô tả: Người dùng thể hiện sự đánh giá cao nội dung
+- Luồng:
+  1. Người dùng nhấp nút thích trên bài viết hoặc bình luận
+  2. Hệ thống tăng số lượt thích
+  3. Hệ thống ngăn người dùng thích trùng lặp
+  4. Hệ thống cập nhật số lượt thích theo thời gian thực
+
+UC020: Kiểm duyệt nội dung diễn đàn
+- Tác nhân: Admin
+- Mô tả: Admin quản lý chất lượng nội dung diễn đàn
+- Luồng:
+  1. Admin xem xét nội dung được báo cáo hoặc gắn cờ
+  2. Admin có thể kích hoạt/vô hiệu hóa bài viết và bình luận
+  3. Admin duy trì tiêu chuẩn cộng đồng
+
+6. GAME HÓA & TIẾN ĐỘ
+=====================
+
+UC021: Kiếm điểm kinh nghiệm (XP)
+- Tác nhân: Người dùng
+- Mô tả: Người dùng nhận XP qua các hoạt động học tập khác nhau
+- Luồng:
+  1. Người dùng hoàn thành hoạt động học tập
+  2. Hệ thống tính XP dựa trên loại hoạt động và hiệu suất
+  3. Hệ thống cập nhật tổng XP của người dùng
+  4. Hệ thống ghi lại lịch sử XP với chi tiết hoạt động
+
+UC022: Đạt huy hiệu
+- Tác nhân: Người dùng
+- Mô tả: Người dùng mở khóa thành tích dựa trên hiệu suất
+- Luồng:
+  1. Hệ thống theo dõi hoạt động người dùng so với điều kiện huy hiệu
+  2. Khi đáp ứng điều kiện, hệ thống trao huy hiệu
+  3. Người dùng nhận thông báo thành tích mới
+  4. Huy hiệu xuất hiện trong hồ sơ người dùng
+
+UC023: Duy trì chuỗi học tập
+- Tác nhân: Người dùng
+- Mô tả: Người dùng xây dựng chuỗi ngày học liên tiếp
+- Luồng:
+  1. Người dùng hoàn thành hoạt động học tập hàng ngày
+  2. Hệ thống theo dõi trạng thái học tập hàng ngày
+  3. Hệ thống duy trì bản ghi chuỗi hiện tại và dài nhất
+  4. Hệ thống có thể trao huy hiệu dựa trên chuỗi
+
+UC024: Xem bảng điều khiển tiến độ
+- Tác nhân: Người dùng
+- Mô tả: Người dùng theo dõi tiến độ học tập tổng thể
+- Luồng:
+  1. Người dùng truy cập bảng điều khiển tiến độ
+  2. Hệ thống hiển thị thống kê hàng ngày/tuần/tháng
+  3. Hệ thống hiển thị xu hướng XP, chuỗi, hoạt động đã hoàn thành
+  4. Hệ thống cung cấp hiểu biết và khuyến nghị
+
+UC025: Kiểm tra bảng xếp hạng
+- Tác nhân: Người dùng
+- Mô tả: Người dùng so sánh tiến độ với người học khác
+- Luồng:
+  1. Người dùng xem xếp hạng bảng
+  2. Hệ thống hiển thị người dùng hàng đầu theo XP, chuỗi, v.v.
+  3. Người dùng có thể thấy vị trí xếp hạng của mình
+  4. Hệ thống thúc đẩy tiếp tục tham gia
+
+7. CHỨC NĂNG QUẢN TRỊ
+=====================
+
+UC026: Quản lý nội dung
+- Tác nhân: Admin
+- Mô tả: Admin tạo và duy trì nội dung học tập
+- Luồng:
+  1. Admin thêm/chỉnh sửa chủ đề từ vựng và từ
+  2. Admin tạo bài học và bài tập ngữ pháp
+  3. Admin quản lý danh mục và đề bài viết
+  4. Admin có thể kích hoạt/vô hiệu hóa nội dung
+
+UC027: Tạo câu hỏi bài tập
+- Tác nhân: Admin
+- Mô tả: Admin phát triển nội dung đánh giá
+- Luồng:
+  1. Admin tạo câu hỏi từ vựng và ngữ pháp
+  2. Admin đặt câu trả lời đúng và phần thưởng XP
+  3. Admin gán câu hỏi cho chủ đề/bài học phù hợp
+  4. Admin kiểm tra chức năng câu hỏi
+
+UC028: Theo dõi phân tích hệ thống
+- Tác nhân: Admin
+- Mô tả: Admin theo dõi việc sử dụng và hiệu suất nền tảng
+- Luồng:
+  1. Admin xem thống kê tương tác người dùng
+  2. Admin theo dõi hiệu quả nội dung
+  3. Admin xác định các khu vực cần cải thiện
+  4. Admin tạo báo cáo cho các bên liên quan
+
+UC029: Quản lý hệ thống huy hiệu
+- Tác nhân: Admin
+- Mô tả: Admin cấu hình hệ thống thành tích
+- Luồng:
+  1. Admin tạo huy hiệu mới với điều kiện
+  2. Admin đặt phần thưởng XP cho thành tích
+  3. Admin theo dõi mô hình kiếm huy hiệu
+  4. Admin điều chỉnh độ khó huy hiệu khi cần
+
+8. BÁO CÁO & PHÂN TÍCH
+======================
+
+UC030: Tạo báo cáo tiến độ
+- Tác nhân: Người dùng/Admin
+- Mô tả: Tạo báo cáo học tập chi tiết
+- Luồng:
+  1. Người dùng/Admin chỉ định tham số báo cáo
+  2. Hệ thống biên soạn dữ liệu từ các hoạt động khác nhau
+  3. Hệ thống tạo báo cáo tiến độ toàn diện
+  4. Báo cáo bao gồm xu hướng, thành tích, khuyến nghị
+
+UC031: Xuất dữ liệu học tập
+- Tác nhân: Người dùng
+- Mô tả: Người dùng xuất lịch sử học tập cá nhân
+- Luồng:
+  1. Người dùng yêu cầu xuất dữ liệu
+  2. Hệ thống biên soạn bản ghi học tập hoàn chỉnh của người dùng
+  3. Hệ thống cung cấp báo cáo có thể tải xuống
+  4. Người dùng có thể sử dụng dữ liệu để theo dõi cá nhân
+
+CÂN NHẮC KỸ THUẬT
+=================
+
+- Tất cả hoạt động người dùng được ghi lại để theo dõi tiến độ
+- Hệ thống hỗ trợ cập nhật thời gian thực cho tương tác diễn đàn
+- Trigger tự động duy trì tính nhất quán dữ liệu
+- Tính toán XP và tiến độ được thực hiện tự động
+- Hệ thống mở rộng để hỗ trợ nhiều người dùng đồng thời
+- Tính toàn vẹn dữ liệu được duy trì thông qua ràng buộc khóa ngoại
+- Hệ thống cung cấp trải nghiệm phản hồi trên các thiết bị
