@@ -1,13 +1,17 @@
 import { PublicPage, PrivatePage } from './Pages'
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom'
+import OAuth2RedirectHandler from './service/OAuth2RedirectHandler';
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
 
 function App() {
-  // Combine all pages for routing
+  
   const allPages = [...PublicPage, ...PrivatePage];
 
   return (
     <Router>
       <div>
+        <ToastContainer position="top-right" autoClose={3000} />
         <Routes>
           {
             allPages.map((page, index) => {
@@ -27,6 +31,7 @@ function App() {
               )
             })
           }
+          <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
         </Routes>
       </div>
     </Router>

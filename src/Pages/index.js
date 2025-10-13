@@ -8,7 +8,15 @@ import VocabularyDetail from "./User/Vocabulary/VocabularyDetail"
 import Grammar from "./User/Grammar"
 import GrammarDetail from "./User/Grammar_detail"
 import Lesson from "./User/Lesson"
+import Profile from "./Profile"
 import UserLayout from "../components/Layouts/DefaultLayout/UserLayout"
+import AdminLayout from "../components/Layouts/DefaultLayout/AdminLayout"
+
+// Admin Pages
+import AdminDashboard from "./Admin/Dashboard"
+import UserManagement from "./Admin/UserManagement"
+import TopicVocabManagement from "./Admin/TopicVocabManagement"
+import VocabManagement from "./Admin/VocabManagement"
 
 const PublicPage = [
     { path: "/", component: LandingPage, layout: UserLayout },
@@ -21,7 +29,14 @@ const PublicPage = [
     { path: "/grammar", component: Grammar, layout: UserLayout },
     { path: "/grammar/:topicId", component: GrammarDetail, layout: UserLayout },
     { path: "/grammar/:topicId/lesson/:lessonId", component: Lesson, layout: UserLayout },
-]
+    { path: "/profile", component: Profile, layout: UserLayout },
+    
+    // Admin Routes
+    { path: "/admin/dashboard", component: AdminDashboard, layout: AdminLayout },
+    { path: "/admin/users", component: UserManagement, layout: AdminLayout },
+    { path: "/admin/topics", component: TopicVocabManagement, layout: AdminLayout },
+    { path: "/admin/vocabulary", component: VocabManagement, layout: AdminLayout }
+];
 
 const PrivatePage = [
     

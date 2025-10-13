@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { login, loginWithGoogle } from "../../service/authService";
+import { toast } from 'react-toastify';
+
 
 const Login = () => {
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -19,25 +23,45 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError(""); 
+  const { email, password } = formData; 
+
+  try {
+    console.log("🔐 Starting login...");
+    const user = await login({ email, password });
+    console.log("✅ Login successful, user data:", user);
+    const name = user?.fullName || user?.fullname || user?.username || user?.name || user?.email || 'Người dùng';
+    toast.success(`Đăng nhập thành công, ${name}!`);
+    // Đợi để đảm bảo tất cả events được xử lý
+    await new Promise(resolve => setTimeout(resolve, 200));
     
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false);
-      // Navigate to dashboard after successful login
-      navigate('/dashboard');
-    }, 2000);
-  };
+    console.log("🔄 Navigating to dashboard...");
+    navigate("/dashboard");
+  } catch (err) {
+    console.error("❌ Login failed:", err);
+    const msg = err?.response?.data?.message || 'Đăng nhập thất bại';
+    toast.error(msg);
+    if (err.response && err.response.data) {
+      setError(err.response.data.message);
+    } else {
+      setError("Đăng nhập thất bại");
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const handleGoogleLogin = () => {
-    // Implement Google OAuth login
-    console.log('Google login clicked');
+    toast.info('Chuyển hướng tới Google để đăng nhập...');
+    loginWithGoogle();
+    
   };
 
   const handleFacebookLogin = () => {
-    // Implement Facebook OAuth login
     console.log('Facebook login clicked');
   };
 
@@ -146,6 +170,7 @@ const Login = () => {
                     </svg>
                   )}
                 </button>
+                {error && <p className="text-red-500 mb-4">{error}</p>}
               </div>
             </div>
 

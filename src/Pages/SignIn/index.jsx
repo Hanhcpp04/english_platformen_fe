@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
+import { register } from "../../service/authService";
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -8,8 +8,6 @@ const Register = () => {
     email: '',
     username: '',
     password: '',
-    confirmPassword: '',
-    agreeTerms: false
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -33,17 +31,29 @@ const Register = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    // Simulate registration process
-    setTimeout(() => {
-      setIsLoading(false);
-      // Navigate to dashboard after successful registration
-      navigate('/dashboard');
-    }, 2000);
-  };
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+
+  try {
+    const user = await register(formData); 
+    console.log("Đăng ký thành công:", user);
+    if (user.accessToken) {
+      localStorage.setItem("accessToken", user.accessToken);
+      localStorage.setItem("refreshToken", user.refreshToken);
+      localStorage.setItem("userId", user.user?.id);
+      localStorage.setItem("userEmail", user.user?.email);
+      localStorage.setItem("userRole", user.user?.role);
+    }
+
+    navigate("/login");
+  } catch (err) {
+    console.error(err);
+    setError(err.message || "Đăng ký thất bại");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleGoogleRegister = () => {
     // Implement Google OAuth registration

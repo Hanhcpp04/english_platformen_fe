@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BookOpen,
@@ -14,107 +14,109 @@ import {
 } from 'lucide-react';
 
 const VocabularyPage = () => {
-  const stats = [
-    {
-      icon: BookOpen,
-      value: '77',
-      label: 'Từ đã học',
-      bgColor: 'bg-primary/10',
-      iconColor: 'text-primary',
-    },
-    {
-      icon: CheckCircle2,
-      value: '3',
-      label: 'Chủ đề hoàn thành',
-      bgColor: 'bg-secondary/10',
-      iconColor: 'text-secondary',
-    },
-    {
-      icon: TrendingUp,
-      value: '92%',
-      label: 'Độ chính xác',
-      bgColor: 'bg-green-50',
-      iconColor: 'text-green-600',
-    },
-    {
-      icon: Zap,
-      value: '350',
-      label: 'XP kiếm được',
-      bgColor: 'bg-purple-50',
-      iconColor: 'text-purple-600',
-    },
-  ];
+  const [stats, setStats] = useState([
+    { icon: BookOpen, value: '0', label: 'Từ đã học', bgColor: 'bg-primary/10', iconColor: 'text-primary' },
+    { icon: CheckCircle2, value: '0', label: 'Chủ đề hoàn thành', bgColor: 'bg-secondary/10', iconColor: 'text-secondary' },
+    { icon: TrendingUp, value: '0%', label: 'Độ chính xác', bgColor: 'bg-green-50', iconColor: 'text-green-600' },
+    { icon: Zap, value: '0', label: 'XP kiếm được', bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
+  ]);
+  const [topics, setTopics] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const topics = [
-    {
-      id: 1,
-      emoji: '🏃',
-      title: 'Daily Activities',
-      titleVi: 'Hoạt động hàng ngày',
-      description: 'Từ vựng về các hoạt động thường ngày',
-      totalWords: 50,
-      learnedWords: 45,
-      xp: 100,
-      link: '/vocabulary/daily-activities',
-    },
-    {
-      id: 2,
-      emoji: '🍔',
-      title: 'Food & Drinks',
-      titleVi: 'Đồ ăn & Thức uống',
-      description: 'Từ vựng về món ăn và đồ uống',
-      totalWords: 60,
-      learnedWords: 32,
-      xp: 120,
-      link: '/vocabulary/food-drinks',
-    },
-    {
-      id: 3,
-      emoji: '✈️',
-      title: 'Travel & Transportation',
-      titleVi: 'Du lịch & Giao thông',
-      description: 'Từ vựng về du lịch và phương tiện',
-      totalWords: 55,
-      learnedWords: 0,
-      xp: 110,
-      link: '/vocabulary/travel',
-    },
-    {
-      id: 4,
-      emoji: '💼',
-      title: 'Work & Business',
-      titleVi: 'Công việc & Kinh doanh',
-      description: 'Từ vựng về môi trường làm việc',
-      totalWords: 70,
-      learnedWords: 0,
-      xp: 140,
-      link: '/vocabulary/work-business',
-    },
-    {
-      id: 5,
-      emoji: '💻',
-      title: 'Technology',
-      titleVi: 'Công nghệ',
-      description: 'Từ vựng về công nghệ và máy tính',
-      totalWords: 65,
-      learnedWords: 0,
-      xp: 130,
-      link: '/vocabulary/technology',
-    },
-    {
-      id: 6,
-      emoji: '💪',
-      title: 'Health & Fitness',
-      titleVi: 'Sức khỏe & Thể hình',
-      description: 'Từ vựng về sức khỏe và tập luyện',
-      totalWords: 50,
-      learnedWords: 0,
-      xp: 100,
-      link: '/vocabulary/health-fitness',
-    },
-  ];
+  const slugify = (s = '') => s.toString().toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const emojiMap = {
+    Family: '👪',
+    'Daily Activities': '🏃',
+    'Food & Drinks': '🍔',
+    Travel: '✈️',
+    Technology: '💻',
+    'Health & Fitness': '💪',
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    // get token from localStorage (adjust keys if your app stores it under a different name)
+    const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+    if (!token) {
+      if (!mounted) return;
+      setError('Không tìm thấy token. Vui lòng đăng nhập.');
+      setLoading(false);
+      return;
+    }
+
+    // try to get userId from localStorage or decode from JWT payload
+    let userId = localStorage.getItem('userId') || null;
+    if (!userId) {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          userId = payload.userId || payload.sub || payload.id || null;
+        }
+      } catch (e) {
+        
+      }
+    }
+    userId = userId || 1; // fallback id if none available
+
+    fetch(`http://localhost:8088/api/v1/vocab/stats/${userId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      // credentials: 'include' // uncomment if your API requires cookies
+    })
+      .then((res) => {
+        if (!res.ok) {
+          // provide clearer messages for auth errors
+          if (res.status === 401) throw new Error('Unauthorized (401). Token may be invalid or expired.');
+          throw new Error(`${res.status} ${res.statusText}`);
+        }
+        return res.json();
+      })
+      .then((json) => {
+        if (!mounted) return;
+        // adjust if your API wraps differently
+        const result = json.result || json;
+        const topicProgress = result.topicProgress || [];
+        const avgCompletion = topicProgress.length
+          ? Math.round((topicProgress.reduce((s, t) => s + (t.completionPercentage || 0), 0) / topicProgress.length) * 100)
+          : 0;
+
+        setStats([
+          { icon: BookOpen, value: String(result.totalWordsLearned || 0), label: 'Từ đã học', bgColor: 'bg-primary/10', iconColor: 'text-primary' },
+          { icon: CheckCircle2, value: String(result.topicsCompleted || 0), label: 'Chủ đề hoàn thành', bgColor: 'bg-secondary/10', iconColor: 'text-secondary' },
+          { icon: TrendingUp, value: `${avgCompletion}%`, label: 'Độ chính xác', bgColor: 'bg-green-50', iconColor: 'text-green-600' },
+          { icon: Zap, value: String(result.totalXpEarned || 0), label: 'XP kiếm được', bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
+        ]);
+
+        setTopics(topicProgress.map((tp) => ({
+          id: tp.topicId,
+          emoji: emojiMap[tp.englishName] || '📘',
+          title: tp.englishName || tp.topicName,
+          titleVi: tp.topicName,
+          description: tp.englishName || '',
+          totalWords: tp.totalWords || 0,
+          learnedWords: tp.wordsLearned || 0,
+          xp: tp.xpEarned || 0,
+          link: `/vocabulary/${slugify(tp.englishName || tp.topicName)}`,
+        })));
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        setError(err?.message || 'Failed to load');
+        setLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const calculateProgress = (learned, total) => {
+    if (!total || total === 0) return 0;
     return Math.round((learned / total) * 100);
   };
 
@@ -158,15 +160,19 @@ const VocabularyPage = () => {
             </div>
           ))}
         </div>
+        {error && <div className="text-red-600 mb-4">Lỗi: {error}</div>}
 
         {/* TOPICS SECTION */}
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Chủ đề từ vựng</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {topics.map((topic) => {
-              const progress = calculateProgress(topic.learnedWords, topic.totalWords);
-
-              return (
+            {loading ? (
+              // simple loading placeholder
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-lg border-2 border-gray-100 p-6 h-44 animate-pulse" />
+              ))
+            ) : (
+              topics.map((topic) => (
                 <div
                   key={topic.id}
                   className="bg-white rounded-lg border-2 border-gray-100 p-6 space-y-4 transition-all duration-300 hover:border-primary hover:shadow-lg"
@@ -199,7 +205,7 @@ const VocabularyPage = () => {
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
-                      style={{ width: `${progress}%` }}
+                      style={{ width: `${calculateProgress(topic.learnedWords, topic.totalWords)}%` }}
                     />
                   </div>
 
@@ -212,13 +218,13 @@ const VocabularyPage = () => {
                     Bắt đầu học
                   </Link>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+              ))
+             )}
+           </div>
+         </div>
+       </div>
+     </div>
+   );
 };
 
 export default VocabularyPage;
