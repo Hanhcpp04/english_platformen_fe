@@ -32,15 +32,16 @@ const Footer = () => {
 
   return (
     <footer className="bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Column 1: Logo + Tagline */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2 group w-fit">
-              <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-2 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg">
-                <Zap className="w-5 h-5 text-white" />
+              {/* thu nhỏ icon/logo */}
+              <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-1.5 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg">
+                <Zap className="w-4 h-4 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <span className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                 English Smart
               </span>
             </Link>
@@ -140,8 +141,8 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
+        {/* Copyright - giảm margin/top padding để thấp hơn */}
+        <div className="mt-6 pt-4 border-t border-gray-200">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-600 text-sm text-center md:text-left">
               © {currentYear} English Smart. All rights reserved.

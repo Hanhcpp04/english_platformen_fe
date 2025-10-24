@@ -25,15 +25,6 @@ const VocabularyPage = () => {
   const [error, setError] = useState(null);
 
   const slugify = (s = '') => s.toString().toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-  const emojiMap = {
-    Family: '👪',
-    'Daily Activities': '🏃',
-    'Food & Drinks': '🍔',
-    Travel: '✈️',
-    Technology: '💻',
-    'Health & Fitness': '💪',
-  };
-
   useEffect(() => {
     let mounted = true;
 
@@ -59,18 +50,17 @@ const VocabularyPage = () => {
         
       }
     }
-    userId = userId || 1; // fallback id if none available
+    userId = userId || 1; 
 
     fetch(`http://localhost:8088/api/v1/vocab/stats/${userId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      // credentials: 'include' // uncomment if your API requires cookies
+      
     })
       .then((res) => {
         if (!res.ok) {
-          // provide clearer messages for auth errors
           if (res.status === 401) throw new Error('Unauthorized (401). Token may be invalid or expired.');
           throw new Error(`${res.status} ${res.statusText}`);
         }
@@ -78,12 +68,17 @@ const VocabularyPage = () => {
       })
       .then((json) => {
         if (!mounted) return;
-        // adjust if your API wraps differently
         const result = json.result || json;
         const topicProgress = result.topicProgress || [];
-        const avgCompletion = topicProgress.length
-          ? Math.round((topicProgress.reduce((s, t) => s + (t.completionPercentage || 0), 0) / topicProgress.length) * 100)
-          : 0;
+        // Compute average completion robustly.
+        // Some APIs return completionPercentage as a fraction (0..1), others as percent (0..100).
+        let avgCompletion = 0;
+        if (topicProgress.length) {
+          let avg = topicProgress.reduce((s, t) => s + (typeof t.completionPercentage === 'number' ? t.completionPercentage : 0), 0) / topicProgress.length;
+          // If value looks like a fraction, convert to percent
+          if (avg <= 1) avg = avg * 100;
+          avgCompletion = Math.round(avg);
+        }
 
         setStats([
           { icon: BookOpen, value: String(result.totalWordsLearned || 0), label: 'Từ đã học', bgColor: 'bg-primary/10', iconColor: 'text-primary' },
@@ -94,14 +89,14 @@ const VocabularyPage = () => {
 
         setTopics(topicProgress.map((tp) => ({
           id: tp.topicId,
-          emoji: emojiMap[tp.englishName] || '📘',
+          emoji: tp.iconUrl,
           title: tp.englishName || tp.topicName,
           titleVi: tp.topicName,
-          description: tp.englishName || '',
+          description: tp.description || '',
           totalWords: tp.totalWords || 0,
           learnedWords: tp.wordsLearned || 0,
           xp: tp.xpEarned || 0,
-          link: `/vocabulary/${slugify(tp.englishName || tp.topicName)}`,
+          link: `/vocabulary/${tp.topicId}`,
         })));
         setLoading(false);
       })
@@ -212,6 +207,7 @@ const VocabularyPage = () => {
                   {/* Button */}
                   <Link
                     to={topic.link}
+                    state={{topic}}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all duration-200 hover:scale-105 active:scale-95 bg-primary text-white hover:bg-primary/90"
                   >
                     <ArrowRight className="w-4 h-4" />

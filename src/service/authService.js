@@ -85,8 +85,7 @@ export const logout = () => {
 export const getProfile = async () => {
   try {
     const token = localStorage.getItem("accessToken");
-    console.log('📡 getProfile - Calling /auth/me with token:', token ? token.substring(0, 30) + '...' : 'NO TOKEN');
-    
+  
     const res = await request.get("auth/me", {
       headers: {
         Authorization: `Bearer ${token}`

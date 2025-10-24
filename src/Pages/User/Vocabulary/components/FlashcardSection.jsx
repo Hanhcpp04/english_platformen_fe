@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
-import { Volume2, ChevronLeft, ChevronRight, RotateCw, Sparkles } from 'lucide-react';
+import { Volume2, ChevronLeft, ChevronRight, RotateCw, Sparkles, CheckCircle2 } from 'lucide-react';
+import { completeVocabulary } from '../../../../service/vocabularyService';
+import { toast } from 'react-toastify';
 
-const FlashcardSection = ({ vocabularies }) => {
+const FlashcardSection = ({ vocabularies, topicId }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [direction, setDirection] = useState('');
+  const [completedWords, setCompletedWords] = useState(
+    (vocabularies || []).filter(v => v.isCompleted).map(v => v.id)
+  );
+  const [completing, setCompleting] = useState(false);
 
   const currentCard = vocabularies[currentIndex];
 
@@ -39,6 +45,45 @@ const FlashcardSection = ({ vocabularies }) => {
     utterance.lang = 'en-US';
     utterance.rate = 0.8;
     window.speechSynthesis.speak(utterance);
+  };
+
+  const isCurrentCompleted = completedWords.includes(currentCard?.id);
+
+  const handleComplete = async () => {
+    if (!currentCard || completing) return;
+
+    try {
+      setCompleting(true);
+
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const userId = user?.id;
+
+      if (!userId) {
+        toast.error('Vui lòng đăng nhập để hoàn thành từ vựng');
+        setCompleting(false);
+        return;
+      }
+
+      const response = await completeVocabulary(userId, currentCard.id, topicId);
+
+      if (response?.code === 200 || response?.success === true) {
+        setCompletedWords(prev => prev.includes(currentCard.id) ? prev : [...prev, currentCard.id]);
+        toast.success(`Đã hoàn thành từ "${currentCard.word}" (+${currentCard.xpReward || 5} XP)`);
+        setTimeout(() => {
+          if (currentIndex < vocabularies.length - 1) {
+            handleNext();
+          }
+        }, 800);
+      } else {
+        toast.error(response?.message || 'Không thể hoàn thành từ vựng');
+      }
+    } catch (error) {
+      console.error('Error completing vocabulary:', error);
+      toast.error(error?.message || 'Có lỗi xảy ra khi hoàn thành từ vựng');
+    } finally {
+      setCompleting(false);
+    }
   };
 
   return (
@@ -200,8 +245,8 @@ const FlashcardSection = ({ vocabularies }) => {
         </div>
       </div>
 
-      {/* Flip Button - Smaller */}
-      <div className="flex justify-center">
+      {/* Action Buttons - Flip and Complete */}
+      <div className="flex justify-center gap-3">
         <button
           onClick={handleFlip}
           className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary to-primary/80 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300 font-semibold text-sm"
@@ -209,6 +254,22 @@ const FlashcardSection = ({ vocabularies }) => {
           <RotateCw className="w-4 h-4" />
           {isFlipped ? 'Xem từ tiếng Anh' : 'Xem nghĩa'}
         </button>
+        
+        {!isCurrentCompleted ? (
+          <button
+            onClick={handleComplete}
+            disabled={completing}
+            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            {completing ? 'Đang xử lý...' : 'Đã học'}
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 px-6 py-2.5 bg-green-100 text-green-700 rounded-lg border-2 border-green-300 font-semibold text-sm">
+            <CheckCircle2 className="w-4 h-4 fill-current" />
+            Đã hoàn thành
+          </div>
+        )}
       </div>
 
       {/* Quick Navigation Dots */}

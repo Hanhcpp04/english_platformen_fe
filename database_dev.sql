@@ -321,7 +321,121 @@ CREATE TABLE forum_likes (
     INDEX idx_target (target_type, target_id),
     INDEX idx_user_created (user_id, created_at)
 );
+-- 
+CREATE TABLE forum_tags (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT NULL,
+    post_count INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_slug (slug),
+    INDEX idx_post_count (post_count)
+);
 
+CREATE TABLE forum_post_tags (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    post_id INT NOT NULL,
+    tag_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES forum_posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES forum_tags(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_post_tag (post_id, tag_id),
+    INDEX idx_tag_created (tag_id, created_at)
+);
+CREATE TABLE forum_bookmarks (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    post_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES forum_posts(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_bookmark (user_id, post_id),
+    INDEX idx_user_created (user_id, created_at)
+);
+CREATE TABLE forum_post_views (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    post_id INT NOT NULL,
+    user_id INT NULL,
+    ip_address VARCHAR(45) NULL,
+    viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES forum_posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_post_viewed (post_id, viewed_at),
+    INDEX idx_user_post_date (user_id, post_id, viewed_at)
+);
+CREATE TABLE forum_reports (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    reporter_id INT NOT NULL,
+    target_type ENUM('post', 'comment') NOT NULL,
+    target_id INT NOT NULL,
+    reason ENUM('spam', 'inappropriate', 'harassment', 'misinformation', 'other') NOT NULL,
+    description TEXT NULL,
+    status ENUM('pending', 'reviewed', 'resolved', 'rejected') DEFAULT 'pending',
+    reviewed_by INT NULL,
+    reviewed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_status (status),
+    INDEX idx_target (target_type, target_id),
+    INDEX idx_reporter (reporter_id, created_at)
+);
+ALTER TABLE forum_posts 
+ADD COLUMN views INT DEFAULT 0 AFTER comments_count,
+ADD COLUMN pinned BOOLEAN DEFAULT FALSE AFTER is_active,
+ADD COLUMN locked BOOLEAN DEFAULT FALSE AFTER pinned,
+ADD COLUMN locked_reason TEXT NULL AFTER locked,
+ADD COLUMN locked_by INT NULL AFTER locked_reason,
+ADD COLUMN locked_at TIMESTAMP NULL AFTER locked_by,
+ADD INDEX idx_pinned (pinned),
+ADD INDEX idx_locked (locked),
+ADD FOREIGN KEY (locked_by) REFERENCES users(id) ON DELETE SET NULL;
+
+
+DELIMITER $$
+CREATE TRIGGER update_post_views_count_insert
+AFTER INSERT ON forum_post_views
+FOR EACH ROW
+BEGIN
+    UPDATE forum_posts 
+    SET views = (
+        SELECT COUNT(DISTINCT IFNULL(user_id, ip_address))
+        FROM forum_post_views 
+        WHERE post_id = NEW.post_id
+    )
+    WHERE id = NEW.post_id;
+END $$
+
+CREATE TRIGGER update_tag_post_count_insert
+AFTER INSERT ON forum_post_tags
+FOR EACH ROW
+BEGIN
+    UPDATE forum_tags 
+    SET post_count = (
+        SELECT COUNT(*) 
+        FROM forum_post_tags 
+        WHERE tag_id = NEW.tag_id
+    )
+    WHERE id = NEW.tag_id;
+END $$
+
+CREATE TRIGGER update_tag_post_count_delete
+AFTER DELETE ON forum_post_tags
+FOR EACH ROW
+BEGIN
+    UPDATE forum_tags 
+    SET post_count = (
+        SELECT COUNT(*) 
+        FROM forum_post_tags 
+        WHERE tag_id = OLD.tag_id
+    )
+    WHERE id = OLD.tag_id;
+END $$
+
+DELIMITER ;
+-- 
 CREATE TABLE user_daily_stats (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,

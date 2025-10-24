@@ -10,7 +10,7 @@ const Header = () => {
   const navItems = [
     { label: 'Tính năng', href: '#features' },
     { label: 'Cách hoạt động', href: '#how-it-works' },
-    { label: 'Cộng đồng', href: '#community' },
+    { label: 'Cộng đồng', href: '/forum' },
   ];
 
   useEffect(() => {

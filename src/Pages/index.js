@@ -12,6 +12,13 @@ import Profile from "./Profile"
 import UserLayout from "../components/Layouts/DefaultLayout/UserLayout"
 import AdminLayout from "../components/Layouts/DefaultLayout/AdminLayout"
 
+// Forum Pages
+import ForumHome from "./User/Forum/ForumHome"
+import PostDetailPage from "./User/Forum/PostDetailPage"
+import CreatePostPage from "./User/Forum/CreatePostPage"
+import EditPostPage from "./User/Forum/EditPostPage"
+import MyPostsPage from "./User/Forum/MyPostsPage"
+
 // Admin Pages
 import AdminDashboard from "./Admin/Dashboard"
 import UserManagement from "./Admin/UserManagement"
@@ -30,6 +37,13 @@ const PublicPage = [
     { path: "/grammar/:topicId", component: GrammarDetail, layout: UserLayout },
     { path: "/grammar/:topicId/lesson/:lessonId", component: Lesson, layout: UserLayout },
     { path: "/profile", component: Profile, layout: UserLayout },
+    
+    // Forum Routes
+    { path: "/forum", component: ForumHome, layout: UserLayout },
+    { path: "/forum/create", component: CreatePostPage, layout: UserLayout },
+    { path: "/forum/edit/:postId", component: EditPostPage, layout: UserLayout },
+    { path: "/forum/me", component: MyPostsPage, layout: UserLayout },
+    { path: "/forum/:id", component: PostDetailPage, layout: UserLayout },
     
     // Admin Routes
     { path: "/admin/dashboard", component: AdminDashboard, layout: AdminLayout },

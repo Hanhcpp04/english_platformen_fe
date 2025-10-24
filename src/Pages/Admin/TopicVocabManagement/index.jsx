@@ -189,109 +189,87 @@ const TopicVocabManagement = () => {
   };
 
   const TopicModal = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md"> {/* smaller modal */}
         {/* Modal Header */}
-        <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">
+        <div className="border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">
             {modalMode === 'add' ? 'Thêm chủ đề mới' : 'Chỉnh sửa chủ đề'}
           </h2>
           <button
             onClick={() => setShowModal(false)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded transition-colors"
+            aria-label="Đóng"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
 
         {/* Modal Content */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 space-y-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Tên chủ đề <span className="text-red-500">*</span>
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tên chủ đề <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
               placeholder="Nhập tên chủ đề..."
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Mô tả
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="Nhập mô tả chủ đề..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="Nhập mô tả..."
               rows={3}
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Icon (emoji hoặc URL)
-            </label>
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center text-2xl bg-gray-50">
-                {formData.icon_url || '📚'}
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 w-10 h-10 border rounded-md flex items-center justify-center text-xl bg-gray-50">
+              {formData.icon_url || '📚'}
+            </div>
+            <input
+              type="text"
+              value={formData.icon_url}
+              onChange={(e) => setFormData({ ...formData, icon_url: e.target.value })}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="Emoji hoặc URL icon..."
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <label className="block text-sm text-gray-700 mb-1">XP thưởng</label>
               <input
-                type="text"
-                value={formData.icon_url}
-                onChange={(e) => setFormData({ ...formData, icon_url: e.target.value })}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Nhập emoji hoặc URL icon..."
+                type="number"
+                value={formData.xp_reward}
+                onChange={(e) => setFormData({ ...formData, xp_reward: parseInt(e.target.value) })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                min="0"
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              XP thưởng
-            </label>
-            <input
-              type="number"
-              value={formData.xp_reward}
-              onChange={(e) => setFormData({ ...formData, xp_reward: parseInt(e.target.value) })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              min="0"
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              id="is_active"
-              checked={formData.is_active}
-              onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-            />
-            <label htmlFor="is_active" className="text-sm font-medium text-gray-700">
-              Kích hoạt chủ đề này
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={formData.is_active}
+                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                className="w-4 h-4"
+              />
+              Kích hoạt
             </label>
           </div>
 
-          {/* Modal Footer */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={() => setShowModal(false)}
-              className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium flex items-center gap-2"
-            >
+          <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 mt-2">
+            <button type="button" onClick={() => setShowModal(false)} className="px-3 py-1.5 rounded-md border text-sm">Hủy</button>
+            <button type="submit" className="px-3 py-1.5 rounded-md bg-primary text-white text-sm flex items-center gap-2">
               <Save className="w-4 h-4" />
-              {modalMode === 'add' ? 'Thêm mới' : 'Cập nhật'}
+              {modalMode === 'add' ? 'Thêm' : 'Lưu'}
             </button>
           </div>
         </form>
@@ -301,10 +279,10 @@ const TopicVocabManagement = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="flex items-center justify-center h-56 bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải dữ liệu...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
+          <p className="text-sm text-gray-600">Đang tải...</p>
         </div>
       </div>
     );
@@ -312,106 +290,82 @@ const TopicVocabManagement = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Compact Header + Toolbar */}
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Quản lý chủ đề từ vựng</h1>
-            <p className="text-gray-600">Quản lý các chủ đề từ vựng trong hệ thống</p>
+            <h1 className="text-xl font-semibold text-gray-900">Quản lý chủ đề từ vựng</h1>
+            <p className="text-sm text-gray-500">Quản lý các chủ đề và cài đặt nhanh</p>
           </div>
-          <button
-            onClick={handleAddTopic}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium shadow-md hover:shadow-lg"
-          >
-            <Plus className="w-5 h-5" />
-            Thêm chủ đề mới
-          </button>
-        </div>
 
-        {/* Search */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm chủ đề..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
-          </div>
-        </div>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Tìm chủ đề..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md w-56 focus:ring-1 focus:ring-primary"
+              />
+            </div>
 
-        {/* Topics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTopics.map((topic) => (
-            <div
-              key={topic.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200"
+            <button
+              onClick={handleAddTopic}
+              className="inline-flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-md text-sm"
+              title="Thêm chủ đề"
             >
-              <div className="p-6">
-                {/* Topic Header */}
-                <div className="flex items-start justify-between mb-4">
+              <Plus className="w-4 h-4" />
+              Thêm
+            </button>
+          </div>
+        </div>
+
+        {/* Topics Grid (compact cards) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredTopics.map((topic) => (
+            <div key={topic.id} className="bg-white rounded-lg border border-gray-100 hover:shadow-md transition-colors">
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="text-4xl">{topic.icon_url || '📚'}</div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 mb-1">{topic.name}</h3>
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                        topic.is_active 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-red-100 text-red-700'
+                    <div className="text-2xl">{topic.icon_url || '📚'}</div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-gray-900 truncate">{topic.name}</h3>
+                      <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                        topic.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                       }`}>
-                        {topic.is_active ? (
-                          <><CheckCircle className="w-3 h-3" /> Hoạt động</>
-                        ) : (
-                          <><XCircle className="w-3 h-3" /> Tạm dừng</>
-                        )}
-                      </span>
+                        {topic.is_active ? <><CheckCircle className="w-3 h-3" /> Hoạt động</> : <><XCircle className="w-3 h-3" /> Tạm dừng</>}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Description */}
-                <p className="text-sm text-gray-600 mb-4 line-clamp-2 min-h-[40px]">
-                  {topic.description}
-                </p>
+                <p className="text-xs text-gray-600 mt-2 line-clamp-2 min-h-[38px]">{topic.description}</p>
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
                   <div>
-                    <p className="text-xs text-gray-600 mb-1">Số từ vựng</p>
-                    <p className="text-lg font-bold text-gray-900">{topic.total_words}</p>
+                    <div className="text-xxs text-gray-500">Số từ</div>
+                    <div className="font-semibold text-sm text-gray-900">{topic.total_words}</div>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 mb-1">XP thưởng</p>
-                    <p className="text-lg font-bold text-primary">{topic.xp_reward}</p>
+                    <div className="text-xxs text-gray-500">XP</div>
+                    <div className="font-semibold text-sm text-primary">{topic.xp_reward}</div>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
+                <div className="flex items-center gap-2 mt-3">
                   <button
                     onClick={() => handleToggleActive(topic.id)}
-                    className={`flex-1 px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
-                      topic.is_active
-                        ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
-                        : 'bg-green-50 text-green-700 hover:bg-green-100'
+                    className={`flex-1 px-2 py-1 rounded-md text-sm font-medium ${
+                      topic.is_active ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100' : 'bg-green-50 text-green-700 hover:bg-green-100'
                     }`}
                   >
                     {topic.is_active ? 'Tạm dừng' : 'Kích hoạt'}
                   </button>
-                  <button
-                    onClick={() => handleEditTopic(topic)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Chỉnh sửa"
-                  >
+                  <button onClick={() => handleEditTopic(topic)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-md" title="Chỉnh sửa">
                     <Edit2 className="w-4 h-4" />
                   </button>
-                  <button
-                    onClick={() => handleDeleteTopic(topic.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Xóa"
-                  >
+                  <button onClick={() => handleDeleteTopic(topic.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-md" title="Xóa">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -422,21 +376,13 @@ const TopicVocabManagement = () => {
 
         {/* Empty State */}
         {filteredTopics.length === 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-            <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Không tìm thấy chủ đề nào
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {searchTerm ? 'Thử tìm kiếm với từ khóa khác' : 'Hãy thêm chủ đề mới để bắt đầu'}
-            </p>
+          <div className="bg-white rounded-lg border border-gray-100 p-6 text-center mt-6">
+            <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Không tìm thấy chủ đề</h3>
+            <p className="text-xs text-gray-600 mb-4">{searchTerm ? 'Thử từ khóa khác' : 'Thêm chủ đề để bắt đầu'}</p>
             {!searchTerm && (
-              <button
-                onClick={handleAddTopic}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
-              >
-                <Plus className="w-5 h-5" />
-                Thêm chủ đề mới
+              <button onClick={handleAddTopic} className="inline-flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-md text-sm">
+                <Plus className="w-4 h-4" /> Thêm chủ đề
               </button>
             )}
           </div>
