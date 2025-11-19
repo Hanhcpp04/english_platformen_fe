@@ -15,39 +15,33 @@ const UserAvatar = () => {
       console.log('👤 UserAvatar - Loading user data...');
       setIsLoading(true);
       
-      // Lấy thông tin user từ localStorage
-      const userStr = localStorage.getItem('user');
       const token = localStorage.getItem('accessToken');
       
-      console.log('👤 UserAvatar - Raw data:', {
-        userStr: userStr ? userStr.substring(0, 50) + '...' : null,
-        token: token ? token.substring(0, 20) + '...' : null
-      });
-      
-      if (userStr && userStr !== 'undefined' && userStr !== 'null') {
-        try {
-          const userData = JSON.parse(userStr);
-          console.log('✅ UserAvatar - Parsed user data:', userData);
-          setUser(userData);
-          setIsLoading(false);
-        } catch (error) {
-          console.error('❌ UserAvatar - Error parsing user data:', error);
-          localStorage.removeItem('user'); // Xóa dữ liệu lỗi
-          setUser(null);
-          setIsLoading(false);
-        }
-      } else if (token && token !== 'undefined' && token !== 'null' && token.trim() !== '') {
-        // Nếu có token nhưng không có user data, fetch từ API
-        console.log('⚠️ UserAvatar - No user data but have token, fetching from API...');
-        
+      if (token && token !== 'undefined' && token !== 'null' && token.trim() !== '') {
         try {
           const { getProfile } = await import('../../service/authService');
           const profileData = await getProfile();
           const userData = profileData.result || profileData;
           
           console.log('✅ UserAvatar - Fetched user data from API:', userData);
-          localStorage.setItem('user', JSON.stringify(userData));
-          setUser(userData);
+          
+          // Map dữ liệu từ API sang format hiển thị
+          const mappedUser = {
+            id: userData.id,
+            username: userData.username,
+            email: userData.email,
+            fullName: userData.fullname,
+            avatar: userData.avatar,
+            role: userData.role,
+            level: userData.currentLevel?.levelNumber || 1,
+            levelName: userData.currentLevel?.levelName || 'Beginner',
+            totalXp: userData.totalXp || 0,
+            provider: userData.provider,
+            streak: userData.streak?.currentStreak ?? 0,
+            coins: userData.coins ?? 0
+          };
+          
+          setUser(mappedUser);
           setIsLoading(false);
         } catch (error) {
           console.error('❌ UserAvatar - Error fetching user profile:', error);
@@ -55,7 +49,7 @@ const UserAvatar = () => {
           setIsLoading(false);
         }
       } else {
-        console.log('❌ UserAvatar - No user data and no token');
+        console.log('❌ UserAvatar - No token found');
         setUser(null);
         setIsLoading(false);
       }

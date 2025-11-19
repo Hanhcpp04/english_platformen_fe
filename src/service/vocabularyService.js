@@ -8,12 +8,9 @@ import { request } from "./request";
  */
 export const getVocabularyByTopic = async (topicId, userId) => {
   try {
-    const token = localStorage.getItem("accessToken");
+    // Token sẽ tự động được thêm bởi request interceptor
     const res = await request.get(`vocab/topic/${topicId}/words`, {
-      params: { userId },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      params: { userId }
     });
     return res.data;
   } catch (err) {
@@ -30,14 +27,13 @@ export const getVocabularyByTopic = async (topicId, userId) => {
  */
 export const completeVocabulary = async (userId, wordId, topicId) => {
   try {
-    const token = localStorage.getItem("accessToken");
+    // Token sẽ tự động được thêm bởi request interceptor
     const url = `vocab/complete`;
     const res = await request.post(
       `${url}?userId=${encodeURIComponent(userId)}`,
       { wordId, topicId },
       {
         headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
           "Content-Type": "application/json",
         },
       }
@@ -59,14 +55,11 @@ export const completeVocabulary = async (userId, wordId, topicId) => {
  */
 export const getExerciseTypesByTopic = async (topicId, userId) => {
   try {
-    const token = localStorage.getItem("accessToken");
+    // Token sẽ tự động được thêm bởi request interceptor
     const res = await request.get(
       `vocab/exercise/topics/${topicId}/exercise-types`,
       {
-        params: { userId },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        params: { userId }
       }
     );
     return res.data;
@@ -76,23 +69,14 @@ export const getExerciseTypesByTopic = async (topicId, userId) => {
   }
 };
 
-/**
- * 🩷 Step 2: Get questions for a specific exercise type and topic
- * @param {number} typeId - The exercise type ID
- * @param {number} topicId - The topic ID
- * @param {number} userId - The user ID
- * @returns {Promise} - API response with questions list
- */
+
 export const getExerciseQuestions = async (typeId, topicId, userId) => {
   try {
-    const token = localStorage.getItem("accessToken");
+    // Token sẽ tự động được thêm bởi request interceptor
     const res = await request.get(
       `vocab/exercise/exercise-types/${typeId}/topics/${topicId}/questions`,
       {
-        params: { userId },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        params: { userId }
       }
     );
     return res.data;
@@ -102,21 +86,14 @@ export const getExerciseQuestions = async (typeId, topicId, userId) => {
   }
 };
 
-/**
- * 💚 Step 3: Submit answer for a question
- * @param {number} questionId - The question ID
- * @param {object} answerData - Answer data containing userId, userAnswer, exerciseType, typeId, topicId
- * @returns {Promise} - API response with result
- */
 export const submitExerciseAnswer = async (questionId, answerData) => {
   try {
-    const token = localStorage.getItem("accessToken");
+    // Token sẽ tự động được thêm bởi request interceptor
     const res = await request.post(
       `vocab/exercise/questions/${questionId}/submit`,
       answerData,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       }

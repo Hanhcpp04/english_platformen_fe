@@ -20,13 +20,46 @@ const ExerciseSection = ({ topicId }) => {
         setLoading(true);
         setError(null);
 
+        // Lấy thông tin user từ localStorage với xử lý lỗi
         const userStr = localStorage.getItem('user');
-        const user = userStr ? JSON.parse(userStr) : null;
-        const userId = user?.id;
+        let user = null;
+        let userId = null;
+
+        if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+          try {
+            user = JSON.parse(userStr);
+            userId = user?.id;
+          } catch (parseError) {
+            console.error('Error parsing user data:', parseError);
+            localStorage.removeItem('user'); // Xóa dữ liệu lỗi
+          }
+        }
+
+        if (!userId) {
+          console.error('❌ ExerciseSection - No userId found');
+          
+          // Fallback: Thử lấy từ API profile
+          try {
+            const { getProfile } = await import('../../../../service/authService');
+            const profileResponse = await getProfile();
+            const profileData = profileResponse.result || profileResponse;
+            
+            if (profileData?.id) {
+              console.log('✅ ExerciseSection - Got userId from API:', profileData.id);
+              userId = profileData.id;
+              localStorage.setItem('user', JSON.stringify(profileData));
+            } else {
+              throw new Error('No userId in profile');
+            }
+          } catch (err) {
+            console.error('❌ ExerciseSection - Failed to fetch profile:', err);
+          }
+        }
 
         if (!userId) {
           toast.error('Vui lòng đăng nhập để xem bài tập');
           setError('Người dùng chưa đăng nhập');
+          setLoading(false);
           return;
         }
 
@@ -71,12 +104,23 @@ const ExerciseSection = ({ topicId }) => {
       setLoadingQuestions(true);
       setSelectedType(type);
 
+      // Lấy thông tin user từ localStorage với xử lý lỗi
       const userStr = localStorage.getItem('user');
-      const user = userStr ? JSON.parse(userStr) : null;
-      const userId = user?.id;
+      let user = null;
+      let userId = null;
+
+      if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+        try {
+          user = JSON.parse(userStr);
+          userId = user?.id;
+        } catch (parseError) {
+          console.error('Error parsing user data:', parseError);
+        }
+      }
 
       if (!userId) {
         toast.error('Vui lòng đăng nhập');
+        setLoadingQuestions(false);
         return;
       }
 

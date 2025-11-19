@@ -1,17 +1,18 @@
 CREATE TABLE users (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(100) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NULL,
+     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255),
     fullname VARCHAR(255) NOT NULL,
-    avatar VARCHAR(500) NULL,
-    role ENUM('ADMIN','USER') DEFAULT 'USER',
-    google_id VARCHAR(255) NULL,
-    facebook_id VARCHAR(255) NULL,
+    avatar VARCHAR(500),
+    role ENUM('ADMIN', 'USER') DEFAULT 'USER',
+    provider VARCHAR(255),
+    google_id VARCHAR(255) UNIQUE,
+    facebook_id VARCHAR(255) UNIQUE,
     total_xp INT DEFAULT 0,
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     INDEX idx_username (username),
     INDEX idx_email (email),
     INDEX idx_total_xp (total_xp),
@@ -248,9 +249,8 @@ CREATE TABLE writing_prompts (
     INDEX idx_category_active (category_id, is_active),
     INDEX idx_completed (is_completed)
 );
-
 CREATE TABLE forum_posts (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
@@ -266,13 +266,11 @@ CREATE TABLE forum_posts (
     INDEX idx_likes (likes_count),
     INDEX idx_comments_count (comments_count)
 );
-
 CREATE TABLE forum_comments (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     post_id INT NOT NULL,                           
     user_id INT NOT NULL,                           
-    parent_id INT NULL,                             
-    
+    parent_id INT NULL, -- cái này nó sẽ liên kết đến cái cmt của mình để tạo ra cmt con nó là mối quan hệ đệ quy                              
     content TEXT NOT NULL,                          
     likes_count INT DEFAULT 0,                     
     
@@ -290,9 +288,8 @@ CREATE TABLE forum_comments (
     INDEX idx_parent_created (parent_id, created_at),
     INDEX idx_user_created (user_id, created_at)
 );
-
 CREATE TABLE forum_post_media (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     post_id INT NOT NULL,
     media_type ENUM('image','file','text') NOT NULL,
     file_name VARCHAR(255) NULL,
@@ -306,56 +303,8 @@ CREATE TABLE forum_post_media (
     INDEX idx_post_type (post_id, media_type),
     INDEX idx_post_created (post_id, created_at)
 );
-
-CREATE TABLE forum_likes (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,                          
-    target_type ENUM('post', 'comment') NOT NULL,   
-    target_id INT NOT NULL,                         
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  
-    UNIQUE KEY unique_user_like (user_id, target_type, target_id),
-    
-    INDEX idx_target (target_type, target_id),
-    INDEX idx_user_created (user_id, created_at)
-);
--- 
-CREATE TABLE forum_tags (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    slug VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT NULL,
-    post_count INT DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_slug (slug),
-    INDEX idx_post_count (post_count)
-);
-
-CREATE TABLE forum_post_tags (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    post_id INT NOT NULL,
-    tag_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (post_id) REFERENCES forum_posts(id) ON DELETE CASCADE,
-    FOREIGN KEY (tag_id) REFERENCES forum_tags(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_post_tag (post_id, tag_id),
-    INDEX idx_tag_created (tag_id, created_at)
-);
-CREATE TABLE forum_bookmarks (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    post_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (post_id) REFERENCES forum_posts(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_user_bookmark (user_id, post_id),
-    INDEX idx_user_created (user_id, created_at)
-);
 CREATE TABLE forum_post_views (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     post_id INT NOT NULL,
     user_id INT NULL,
     ip_address VARCHAR(45) NULL,
@@ -365,35 +314,6 @@ CREATE TABLE forum_post_views (
     INDEX idx_post_viewed (post_id, viewed_at),
     INDEX idx_user_post_date (user_id, post_id, viewed_at)
 );
-CREATE TABLE forum_reports (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    reporter_id INT NOT NULL,
-    target_type ENUM('post', 'comment') NOT NULL,
-    target_id INT NOT NULL,
-    reason ENUM('spam', 'inappropriate', 'harassment', 'misinformation', 'other') NOT NULL,
-    description TEXT NULL,
-    status ENUM('pending', 'reviewed', 'resolved', 'rejected') DEFAULT 'pending',
-    reviewed_by INT NULL,
-    reviewed_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL,
-    INDEX idx_status (status),
-    INDEX idx_target (target_type, target_id),
-    INDEX idx_reporter (reporter_id, created_at)
-);
-ALTER TABLE forum_posts 
-ADD COLUMN views INT DEFAULT 0 AFTER comments_count,
-ADD COLUMN pinned BOOLEAN DEFAULT FALSE AFTER is_active,
-ADD COLUMN locked BOOLEAN DEFAULT FALSE AFTER pinned,
-ADD COLUMN locked_reason TEXT NULL AFTER locked,
-ADD COLUMN locked_by INT NULL AFTER locked_reason,
-ADD COLUMN locked_at TIMESTAMP NULL AFTER locked_by,
-ADD INDEX idx_pinned (pinned),
-ADD INDEX idx_locked (locked),
-ADD FOREIGN KEY (locked_by) REFERENCES users(id) ON DELETE SET NULL;
-
-
 DELIMITER $$
 CREATE TRIGGER update_post_views_count_insert
 AFTER INSERT ON forum_post_views

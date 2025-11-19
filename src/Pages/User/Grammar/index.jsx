@@ -1,137 +1,152 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Target,
   CheckCircle2,
   Circle,
-  Lock,
-  Award,
   TrendingUp,
   Zap,
   ArrowRight,
   BookOpen,
   ChevronRight,
   Home,
+  Loader2,
 } from 'lucide-react';
+import { getGrammarStats } from '../../../service/grammarService';
+import { getUserId } from '../../../utils/userUtils';
 
 const GrammarPage = () => {
+  const [grammarData, setGrammarData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchGrammarStats = async () => {
+      try {
+        setLoading(true);
+        const userId = getUserId();
+        
+        if (!userId) {
+          setError('Vui lòng đăng nhập để xem thông tin ngữ pháp');
+          setLoading(false);
+          return;
+        }
+
+        const response = await getGrammarStats(userId);
+        
+        if (response.code === 1000) {
+          setGrammarData(response.result);
+        } else {
+          setError('Không thể tải dữ liệu ngữ pháp');
+        }
+      } catch (err) {
+        console.error('Error loading grammar stats:', err);
+        setError('Đã xảy ra lỗi khi tải dữ liệu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGrammarStats();
+  }, []);
   const stats = [
     {
       icon: BookOpen,
-      value: '8',
+      value: grammarData?.totalLessonLearned || '0',
       label: 'Bài học hoàn thành',
-      bgColor: 'bg-secondary/10',
-      iconColor: 'text-secondary',
+      bgColor: 'bg-primary/10',
+      iconColor: 'text-primary',
     },
     {
       icon: Target,
-      value: '2',
-      label: 'Chủ đề đang học',
+      value: grammarData?.topicsCompleted || '0',
+      label: 'Chủ đề đã hoàn thành',
       bgColor: 'bg-primary/10',
       iconColor: 'text-primary',
     },
     {
       icon: TrendingUp,
-      value: '87%',
-      label: 'Độ chính xác',
+      value: grammarData?.topicProgress?.length 
+        ? `${Math.round((grammarData.topicsCompleted / grammarData.topicProgress.length) * 100)}%`
+        : '0%',
+      label: 'Tiến độ hoàn thành',
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600',
     },
     {
       icon: Zap,
-      value: '280',
+      value: grammarData?.totalXpEarned || '0',
       label: 'XP kiếm được',
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-600',
     },
   ];
 
-  const topics = [
-    {
-      id: 1,
-      title: 'Thì hiện tại',
-      titleEn: 'Present Tenses',
-      description: 'Present Simple, Present Continuous, Present Perfect',
-      totalLessons: 5,
-      completedLessons: 5,
-      xp: 100,
-      status: 'completed',
-      bgColor: 'bg-green-50',
-      iconColor: 'text-green-600',
-      borderColor: 'border-green-200 hover:border-green-400',
-      link: '/grammar/present-tenses',
-    },
-    {
-      id: 2,
-      title: 'Thì quá khứ',
-      titleEn: 'Past Tenses',
-      description: 'Past Simple, Past Continuous, Past Perfect',
-      totalLessons: 5,
-      completedLessons: 3,
-      xp: 100,
-      status: 'in-progress',
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-blue-600',
-      borderColor: 'border-blue-200 hover:border-blue-400',
-      link: '/grammar/past-tenses',
-    },
-    {
-      id: 3,
-      title: 'Thì tương lai',
-      titleEn: 'Future Tenses',
-      description: 'Will, Be going to, Future Continuous',
-      totalLessons: 4,
-      completedLessons: 0,
-      xp: 80,
-      status: 'new',
-      bgColor: 'bg-purple-50',
-      iconColor: 'text-purple-600',
-      borderColor: 'border-purple-200 hover:border-purple-400',
-      link: '/grammar/future-tenses',
-    },
-    {
-      id: 4,
-      title: 'Động từ khuyết thiếu',
-      titleEn: 'Modal Verbs',
-      description: 'Can, Could, May, Might, Must, Should',
-      totalLessons: 6,
-      completedLessons: 0,
-      xp: 120,
-      status: 'new',
-      bgColor: 'bg-orange-50',
-      iconColor: 'text-orange-600',
-      borderColor: 'border-orange-200 hover:border-orange-400',
-      link: '/grammar/modal-verbs',
-    },
-    {
-      id: 5,
-      title: 'Câu điều kiện',
-      titleEn: 'Conditionals',
-      description: 'Type 0, Type 1, Type 2, Type 3',
-      totalLessons: 5,
-      completedLessons: 0,
-      xp: 100,
-      status: 'new',
-      bgColor: 'bg-pink-50',
-      iconColor: 'text-pink-600',
-      borderColor: 'border-pink-200 hover:border-pink-400',
-      link: '/grammar/conditionals',
-    },
-    {
-      id: 6,
-      title: 'Câu bị động',
-      titleEn: 'Passive Voice',
-      description: 'Active to Passive transformation',
-      totalLessons: 4,
-      completedLessons: 0,
-      xp: 80,
-      status: 'new',
-      bgColor: 'bg-cyan-50',
-      iconColor: 'text-cyan-600',
-      borderColor: 'border-cyan-200 hover:border-cyan-400',
-      link: '/grammar/passive-voice',
-    },
-  ];
+  // Map topic colors based on topic name
+  const getTopicStyle = (name) => {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('basic tenses') || lowerName.includes('các thì')) {
+      return {
+        bgColor: 'bg-blue-50',
+        iconColor: 'text-blue-600',
+        borderColor: 'border-blue-200 hover:border-blue-400',
+      };
+    }
+    if (lowerName.includes('parts of speech') || lowerName.includes('từ loại')) {
+      return {
+        bgColor: 'bg-green-50',
+        iconColor: 'text-green-600',
+        borderColor: 'border-green-200 hover:border-green-400',
+      };
+    }
+    if (lowerName.includes('sentence structure') || lowerName.includes('cấu trúc câu')) {
+      return {
+        bgColor: 'bg-purple-50',
+        iconColor: 'text-purple-600',
+        borderColor: 'border-purple-200 hover:border-purple-400',
+      };
+    }
+    if (lowerName.includes('verbs') || lowerName.includes('động từ')) { 
+      return {
+        bgColor: 'bg-orange-50',
+        iconColor: 'text-orange-600',
+        borderColor: 'border-orange-200 hover:border-orange-400',
+      };
+    }
+    if (lowerName.includes('advanced') || lowerName.includes('nâng cao')) {
+      return {
+        bgColor: 'bg-pink-50',
+        iconColor: 'text-pink-600',
+        borderColor: 'border-pink-200 hover:border-pink-400',
+      };
+    }
+    return {
+      bgColor: 'bg-gray-50',
+      iconColor: 'text-gray-600',
+      borderColor: 'border-gray-200 hover:border-gray-400',
+    };
+  };
+
+  // Transform API data to topics format
+  const topics = grammarData?.topicProgress?.map((topic) => {
+    const style = getTopicStyle(topic.name);
+    const [titleEn, titleVi] = topic.name.includes(' - ') 
+      ? topic.name.split(' - ') 
+      : [topic.name, ''];
+
+    return {
+      id: topic.id,
+      title: titleVi || titleEn,
+      titleEn: titleVi ? titleEn : '',
+      description: topic.description,
+      totalLessons: topic.total_lessons,
+      completedLessons: topic.completed_lessons,
+      xp: topic.xp_reward,
+      status: topic.status,
+      link: `/grammar/${topic.id}`, // Use numeric ID instead of slug
+      ...style,
+    };
+  }) || [];
 
   const getStatusBadge = (status, completedLessons, totalLessons) => {
     if (status === 'completed') {
@@ -182,6 +197,40 @@ const GrammarPage = () => {
   const calculateProgress = (completed, total) => {
     return Math.round((completed / total) * 100);
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Đang tải dữ liệu ngữ pháp...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Target className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Không thể tải dữ liệu</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            <Home className="w-4 h-4" />
+            Về trang chủ
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

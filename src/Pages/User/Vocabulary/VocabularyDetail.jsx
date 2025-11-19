@@ -35,15 +35,86 @@ const VocabularyDetail = () => {
         setLoading(true);
         setError(null);
 
+        // Debug: Kiểm tra tất cả localStorage keys
+        console.log('=== 🔍 VocabularyDetail - localStorage Debug ===');
+        console.log('All localStorage keys:', Object.keys(localStorage));
+        
+        // Lấy thông tin user từ localStorage với xử lý lỗi
         const userStr = localStorage.getItem('user');
-        const user = userStr ? JSON.parse(userStr) : null;
-        const userId = user?.id;
+        console.log('userStr (raw):', userStr);
+        console.log('userStr type:', typeof userStr);
+        console.log('userStr length:', userStr?.length);
+        
+        let user = null;
+        let userId = null;
 
+        if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+          try {
+            user = JSON.parse(userStr);
+            userId = user?.id;
+            console.log('✅ Parsed user object:', user);
+            console.log('✅ userId extracted:', userId);
+            console.log('✅ userId type:', typeof userId);
+          } catch (parseError) {
+            console.error('❌ Error parsing user data:', parseError);
+            console.error('❌ Failed userStr was:', userStr);
+            localStorage.removeItem('user'); // Xóa dữ liệu lỗi
+          }
+        } else {
+          console.warn('⚠️ userStr is empty, undefined, or null');
+          console.warn('⚠️ Checking alternative storage...');
+          
+          // Thử lấy từ các key khác
+          const altUser = localStorage.getItem('currentUser') || localStorage.getItem('userData');
+          if (altUser) {
+            console.log('⚠️ Found alternative user data:', altUser);
+            try {
+              user = JSON.parse(altUser);
+              userId = user?.id;
+            } catch (e) {
+              console.error('❌ Failed to parse alternative user data:', e);
+            }
+          }
+        }
+
+        if (!userId) {
+          console.error('❌ No userId found after all attempts');
+          console.error('❌ Final user object:', user);
+          
+          // Fallback: Thử lấy từ API profile
+          console.log('⚠️ Attempting to fetch profile from API...');
+          try {
+            const { getProfile } = await import('../../../service/authService');
+            const profileResponse = await getProfile();
+            const profileData = profileResponse.result || profileResponse;
+            
+            if (profileData?.id) {
+              console.log('✅ Got userId from API profile:', profileData.id);
+              userId = profileData.id;
+              
+              // Lưu lại vào localStorage để lần sau không phải gọi API
+              localStorage.setItem('user', JSON.stringify(profileData));
+              user = profileData;
+            } else {
+              throw new Error('No userId in profile response');
+            }
+          } catch (profileError) {
+            console.error('❌ Failed to fetch profile:', profileError);
+            toast.error('Vui lòng đăng nhập lại');
+            setError('Không thể lấy thông tin người dùng');
+            setLoading(false);
+            return;
+          }
+        }
+        
         if (!userId) {
           toast.error('Vui lòng đăng nhập để xem từ vựng');
           setError('Người dùng chưa đăng nhập');
+          setLoading(false);
           return;
         }
+        
+        console.log('✅ Using userId:', userId);
 
         // Fetch vocabulary from API
         const response = await getVocabularyByTopic(topicId, userId);

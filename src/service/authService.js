@@ -15,26 +15,14 @@ export const login = async ({ email, password }) => {
     console.log('✅ Login response:', res.data); 
     
     const result = res.data.result || res.data;
-    const { accessToken, refreshToken, ...userData } = result;
+    const { accessToken, refreshToken } = result;
 
     if (accessToken && refreshToken) {
-      // Clear old data first
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
-      
-      // Save new data
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
-      
-      // Lưu user data (tất cả fields ngoại trừ accessToken và refreshToken)
-      if (userData && Object.keys(userData).length > 0) {
-        localStorage.setItem('user', JSON.stringify(userData));
-        console.log('✅ User saved to localStorage:', userData);
-        console.log('✅ Token saved:', accessToken.substring(0, 20) + '...');
-      } else {
-        console.warn('⚠️ No user data found in response');
-      }
       
       // Đợi một chút để đảm bảo localStorage được ghi hoàn toàn
       await new Promise(resolve => setTimeout(resolve, 50));
@@ -44,7 +32,8 @@ export const login = async ({ email, password }) => {
       window.dispatchEvent(new Event('userLoggedIn'));
       window.dispatchEvent(new Event('storage'));
       
-      return userData;
+      // Trả về true để báo login thành công
+      return true;
     } else {
       throw new Error('Invalid login response: missing tokens');
     }
@@ -84,13 +73,7 @@ export const logout = () => {
 
 export const getProfile = async () => {
   try {
-    const token = localStorage.getItem("accessToken");
-  
-    const res = await request.get("auth/me", {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    const res = await request.get("auth/me");
     
     console.log('✅ getProfile - Response:', res.data);
     return res.data;
@@ -106,11 +89,7 @@ export const getProfile = async () => {
 
 export const updateProfile = async (userData) => {
   try {
-    const res = await request.put("user/profile", userData, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`
-      }
-    });
+    const res = await request.put("user/profile", userData);
     return res.data;
   } catch (err) {
     throw err.response?.data || err;
@@ -119,13 +98,17 @@ export const updateProfile = async (userData) => {
 
 export const getUserStats = async () => {
   try {
-    const res = await request.get("user/stats", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`
-      }
-    });
+    const res = await request.get("user/stats");
     return res.data;
   } catch (err) {
     throw err.response?.data || err;
   }
 };
+export const getBadgeSumary = async(userId) => {
+  try{
+    const res = await request.get(`badge/summary/${userId}`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+}

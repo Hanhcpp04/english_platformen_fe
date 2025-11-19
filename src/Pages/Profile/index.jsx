@@ -16,37 +16,49 @@ import {
   Clock,
   Flame
 } from 'lucide-react';
-import { getProfile } from '../../service/authService';
+import { getProfile, getBadgeSumary } from '../../service/authService';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hoveredBadge, setHoveredBadge] = useState(null);
   const navigate = useNavigate();
 
-  // Normalize various API/localStorage user shapes into the component's expected shape
   const normalizeUser = (u) => {
     if (!u) return null;
-    const totalXp = u.totalXp ?? u.totalXP ?? u.xp ?? 0;
-    const computedLevel = u.level || (typeof totalXp === 'number' ? Math.floor(totalXp / 100) + 1 : 1);
+    
+    // Map dữ liệu từ API response
     return {
-      // prefer camelCase fullName, fallback to lowercase fullname or username
-      fullName: u.fullName || u.fullname || u.full_name || u.username || '',
+      id: u.id,
+      fullName: u.fullname || u.fullName || u.username || '',
       username: u.username || '',
       email: u.email || '',
       avatar: u.avatar || null,
       role: u.role || 'USER',
-      level: computedLevel,
-      totalXp,
+      level: u.currentLevel?.levelNumber || 1,
+      levelName: u.currentLevel?.levelName || 'Beginner',
+      levelDescription: u.currentLevel?.description || '',
+      totalXp: u.totalXp || 0,
+      minXp: u.currentLevel?.minXp || 0,
+      maxXp: u.currentLevel?.maxXp || 499,
+      provider: u.provider,
+      googleId: u.googleId,
+      facebookId: u.facebookId,
+      isActive: u.isActive,
       badges: u.badges || [],
-      streak: u.streak ?? 0,
-      lessonsCompleted: u.lessonsCompleted ?? u.lessons_completed ?? 0,
+      streak: u.streak?.currentStreak ?? 0,
+      longestStreak: u.streak?.longestStreak ?? 0,
+      lastActivityDate: u.streak?.lastActivityDate,
+      streakStartDate: u.streak?.streakStartDate,
+      totalStudyDays: u.streak?.totalStudyDays ?? 0,
+      lessonsCompleted: u.lessonsCompleted ?? 0,
       accuracy: u.accuracy ?? 0,
-      totalHours: u.totalHours ?? u.learningHours ?? 0,
-      recentActivities: u.recentActivities || u.activities || [],
-      coins: u.coins ?? u.totalCoins ?? 0,
-      // preserve original fields if needed
-      _raw: u
+      totalHours: u.totalHours ?? 0,
+      recentActivities: u.recentActivities || [],
+      coins: u.coins ?? 0,
+      createdAt: u.createdAt,
+      updatedAt: u.updatedAt
     };
   };
 
@@ -59,18 +71,32 @@ const Profile = () => {
           return;
         }
 
-        // Lấy từ localStorage trước
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-          setUser(normalizeUser(JSON.parse(userStr)));
-        }
-
-        // Sau đó fetch từ API để cập nhật
+        // Fetch dữ liệu mới từ API
         const response = await getProfile();
         if (response.result) {
           const normalized = normalizeUser(response.result);
+          try {
+            const badgeResp = await getBadgeSumary(response.result.id);
+            const badgeData = badgeResp.result || badgeResp;
+            // map recentBadges sang dạng mà UI dùng
+            if (badgeData?.recentBadges?.length) {
+              normalized.badges = badgeData.recentBadges.map(b => ({
+                id: b.id,
+                name: b.name,
+                description: b.description,
+                iconUrl: b.iconUrl,
+                isEarned: b.isEarned,
+                earnedAt: b.earnedAt
+              }));
+            }
+            // lưu thêm thông tin tổng quan nếu cần
+            normalized.totalBadges = badgeData?.totalBadges ?? normalized.totalBadges;
+            normalized.earnedBadges = badgeData?.earnedBadges ?? normalized.earnedBadges;
+            normalized.unlockedBadges = badgeData?.unlockedBadges ?? normalized.unlockedBadges;
+          } catch (badgeErr) {
+            console.warn('Không lấy được badge summary:', badgeErr);
+          }
           setUser(normalized);
-          localStorage.setItem('user', JSON.stringify(normalized));
         }
       } catch (err) {
         console.error('Error fetching profile:', err);
@@ -82,8 +108,6 @@ const Profile = () => {
 
     fetchUserProfile();
   }, [navigate]);
-
-  // Get initials for avatar
   const getInitials = (name) => {
     const n = name || (user && (user.fullName || user.username)) || 'U';
     return n
@@ -96,17 +120,13 @@ const Profile = () => {
   };
 
   // Calculate level progress
-  const calculateLevelProgress = (level) => {
-    // If totalXp exists on user, compute exact progress from that.
-    if (user && typeof user.totalXp === 'number') {
-      const xp = user.totalXp;
-      const currentLevel = Math.floor(xp / 100) + 1;
-      const xpIntoLevel = xp % 100;
-      return (xpIntoLevel / 100) * 100;
+  const calculateLevelProgress = () => {
+    if (user && typeof user.totalXp === 'number' && user.minXp !== undefined && user.maxXp !== undefined) {
+      const xpRange = user.maxXp - user.minXp;
+      const xpProgress = user.totalXp - user.minXp;
+      return Math.min(100, Math.max(0, (xpProgress / xpRange) * 100));
     }
-    const currentLevel = level || 1;
-    // fallback: show 50% progress for unknown xp
-    return 50;
+    return 0;
   };
 
   if (loading) {
@@ -220,17 +240,20 @@ const Profile = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Tiến độ</span>
                   <span className="font-semibold text-primary">
-                    {Math.round(calculateLevelProgress(user.level))}%
+                    {user.totalXp} / {user.maxXp} XP
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div
                     className="bg-primary h-2.5 rounded-full transition-all duration-500"
-                    style={{ width: `${calculateLevelProgress(user.level)}%` }}
+                    style={{ width: `${calculateLevelProgress()}%` }}
                   ></div>
                 </div>
                 <p className="text-xs text-gray-500 text-center pt-1">
-                  Còn {100 - Math.round(calculateLevelProgress(user.level))} XP để lên cấp {(user.level || 1) + 1}
+                  {user.levelName} - {user.levelDescription}
+                </p>
+                <p className="text-xs text-gray-500 text-center">
+                  Còn {user.maxXp - user.totalXp} XP để lên cấp tiếp theo
                 </p>
               </div>
             </div>
@@ -243,15 +266,47 @@ const Profile = () => {
               </div>
               <div className="grid grid-cols-4 gap-3">
                 {user.badges && user.badges.length > 0 ? (
-                  user.badges.map((badge, index) => (
-                    <div
-                      key={index}
-                      className="aspect-square bg-yellow-100 rounded-lg flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
-                      title={badge.name}
-                    >
-                      <Trophy className="w-6 h-6 text-yellow-500" />
-                    </div>
-                  ))
+                  user.badges.map((badge) => {
+                    const bid = badge.id ?? badge.name;
+                    return (
+                      <div
+                        key={bid}
+                        className="relative"
+                        onMouseEnter={() => setHoveredBadge(bid)}
+                        onMouseLeave={() => setHoveredBadge(null)}
+                      >
+                        <div
+                          className="aspect-square bg-yellow-100 rounded-lg flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
+                          title={badge.name}
+                        >
+                          {/* nếu có iconUrl dùng ảnh, nếu không dùng icon mặc định */}
+                          {badge.iconUrl ? (
+                            <img src={badge.iconUrl} alt={badge.name} className="w-8 h-8 object-contain" />
+                          ) : (
+                            <Trophy className="w-6 h-6 text-yellow-500" />
+                          )}
+                        </div>
+
+                        {/* Tooltip */}
+                        {hoveredBadge === bid && (
+                          <div className="absolute z-10 left-1/2 transform -translate-x-1/2 mt-2 w-56 bg-white border border-gray-200 shadow-lg rounded-md p-3 text-sm text-gray-800">
+                            <div className="flex items-start gap-3">
+                              {badge.iconUrl && (
+                                <img src={badge.iconUrl} alt={badge.name} className="w-10 h-10 rounded-sm object-contain" />
+                              )}
+                              <div>
+                                <div className="font-semibold text-gray-900">{badge.name}</div>
+                                {badge.description && <div className="text-xs text-gray-600 mt-1">{badge.description}</div>}
+                                {badge.earnedAt && (
+                                  <div className="text-xs text-gray-500 mt-2">Đạt được: {new Date(badge.earnedAt).toLocaleString('vi-VN')}</div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 ) : (
                   <>
                     {[1, 2, 3, 4].map((i) => (
@@ -266,7 +321,7 @@ const Profile = () => {
                 )}
               </div>
               <p className="text-center text-gray-500 text-sm mt-4">
-                {user.badges?.length || 0} / 12 huy hiệu
+                {user.badges?.length || 0}  / {user.totalBadges || 12} 
               </p>
             </div>
           </div>
@@ -278,9 +333,23 @@ const Profile = () => {
               <div className="bg-white rounded-lg shadow-md p-4">
                 <div className="flex items-center text-gray-500 mb-2">
                   <Flame className="w-5 h-5 mr-2" />
-                  <span className="text-sm font-medium">Ngày streak</span>
+                  <span className="text-sm font-medium">Streak hiện tại</span>
                 </div>
                 <p className="text-3xl font-bold text-gray-900">{user.streak || 0}</p>
+                <p className="text-xs text-gray-400 mt-1">Streak dài nhất: {user.longestStreak || 0} ngày</p>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <div className="flex items-center text-gray-500 mb-2">
+                  <Calendar className="w-5 h-5 mr-2" />
+                  <span className="text-sm font-medium">Tổng ngày học</span>
+                </div>
+                <p className="text-3xl font-bold text-gray-900">{user.totalStudyDays || 0}</p>
+                {user.lastActivityDate && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Hoạt động: {new Date(user.lastActivityDate).toLocaleDateString('vi-VN')}
+                  </p>
+                )}
               </div>
 
               <div className="bg-white rounded-lg shadow-md p-4">
@@ -297,14 +366,6 @@ const Profile = () => {
                   <span className="text-sm font-medium">Độ chính xác</span>
                 </div>
                 <p className="text-3xl font-bold text-gray-900">{user.accuracy || 0}%</p>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-md p-4">
-                <div className="flex items-center text-gray-500 mb-2">
-                  <Clock className="w-5 h-5 mr-2" />
-                  <span className="text-sm font-medium">Thời gian học</span>
-                </div>
-                <p className="text-3xl font-bold text-gray-900">{user.totalHours || 0}h</p>
               </div>
             </div>
 
@@ -386,5 +447,4 @@ const Profile = () => {
     </div>
   );
 };
-
 export default Profile;

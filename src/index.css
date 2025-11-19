@@ -268,6 +268,250 @@
   animation: progress 2s ease-in-out infinite;
 }
 
+/* ============================================
+   Grammar Lesson Content Styles
+   ============================================ */
+
+.lesson-content {
+  font-family: 'Open Sans', sans-serif;
+  line-height: 1.7;
+}
+
+.lesson-content h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #BFDBFE;
+}
+
+.lesson-content h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.lesson-content h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+.lesson-content p {
+  color: #374151;
+  margin-bottom: 1rem;
+  line-height: 1.75;
+  font-size: 1rem;
+}
+
+.lesson-content ul,
+.lesson-content ol {
+  margin-bottom: 1rem;
+  margin-left: 1.5rem;
+}
+
+.lesson-content ul li,
+.lesson-content ol li {
+  color: #374151;
+  line-height: 1.75;
+  margin-bottom: 0.5rem;
+}
+
+.lesson-content ul li {
+  list-style-type: disc;
+}
+
+.lesson-content ol li {
+  list-style-type: decimal;
+}
+
+.lesson-content ul li::marker {
+  color: #2563EB;
+}
+
+.lesson-content ol li::marker {
+  color: #2563EB;
+  font-weight: 700;
+}
+
+.lesson-content strong {
+  font-weight: 700;
+  color: #111827;
+}
+
+.lesson-content em {
+  font-style: italic;
+  color: #1F2937;
+}
+
+.lesson-content code {
+  background-color: #F3F4F6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-family: 'Courier New', monospace;
+  color: #DB2777;
+}
+
+.lesson-content pre {
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.lesson-content blockquote {
+  border-left: 4px solid #3B82F6;
+  background-color: #EFF6FF;
+  padding-left: 1rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+  color: #374151;
+}
+
+.lesson-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.lesson-content th {
+  background-color: #F9FAFB;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.lesson-content td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: #374151;
+  border-top: 1px solid #E5E7EB;
+}
+
+.lesson-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin: 1rem 0;
+}
+
+.lesson-content a {
+  color: #2563EB;
+  text-decoration: underline;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.lesson-content a:hover {
+  color: #1E40AF;
+}
+
+.lesson-content hr {
+  margin: 1.5rem 0;
+  border: 0;
+  border-top: 1px solid #D1D5DB;
+}
+
+/* Special styled boxes from backend */
+.lesson-content .bg-blue-50 {
+  background-color: #EFF6FF;
+  border-left: 4px solid #3B82F6;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.lesson-content .bg-green-50 {
+  background-color: #F0FDF4;
+  border-left: 4px solid #22C55E;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.lesson-content .bg-yellow-50 {
+  background-color: #FEFCE8;
+  border-left: 4px solid #EAB308;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.lesson-content .bg-red-50 {
+  background-color: #FEF2F2;
+  border-left: 4px solid #EF4444;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.lesson-content .bg-gray-50 {
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+}
+
+/* Special text colors */
+.lesson-content .text-green-600 {
+  color: #16A34A;
+  font-weight: 500;
+}
+
+.lesson-content .text-red-600 {
+  color: #DC2626;
+  font-weight: 500;
+}
+
+.lesson-content .text-blue-600 {
+  color: #2563EB;
+  font-weight: 500;
+}
+
+.lesson-content .text-gray-600 {
+  color: #4B5563;
+}
+
+/* Nested list styling */
+.lesson-content li ul,
+.lesson-content li ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .lesson-content h2 {
+    font-size: 1.5rem;
+  }
+  
+  .lesson-content h3 {
+    font-size: 1.25rem;
+  }
+  
+  .lesson-content h4 {
+    font-size: 1.125rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

@@ -55,9 +55,19 @@ const FlashcardSection = ({ vocabularies, topicId }) => {
     try {
       setCompleting(true);
 
+      // Lấy thông tin user từ localStorage với xử lý lỗi
       const userStr = localStorage.getItem('user');
-      const user = userStr ? JSON.parse(userStr) : null;
-      const userId = user?.id;
+      let user = null;
+      let userId = null;
+
+      if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+        try {
+          user = JSON.parse(userStr);
+          userId = user?.id;
+        } catch (parseError) {
+          console.error('Error parsing user data:', parseError);
+        }
+      }
 
       if (!userId) {
         toast.error('Vui lòng đăng nhập để hoàn thành từ vựng');

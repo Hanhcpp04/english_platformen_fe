@@ -2,6 +2,8 @@ import React from "react";
 import { ThumbsUp, MessageCircle, Eye, Bookmark, Pin, Lock } from "lucide-react";
 
 export default function PostCard({ post, onClick }) {
+  if (!post) return null;
+
   const isPinned = post.pinned || false;
   const isLocked = post.locked || false;
   const maxTags = 2;

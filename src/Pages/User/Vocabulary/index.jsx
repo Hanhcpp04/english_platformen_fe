@@ -28,8 +28,13 @@ const VocabularyPage = () => {
   useEffect(() => {
     let mounted = true;
 
-    // get token from localStorage (adjust keys if your app stores it under a different name)
+    // Lấy thông tin user từ localStorage (nhất quán với các component khác)
+    const userStr = localStorage.getItem('user');
     const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+    
+    console.log('🔍 VocabularyPage - userStr:', userStr);
+    console.log('🔍 VocabularyPage - token:', token ? token.substring(0, 20) + '...' : null);
+
     if (!token) {
       if (!mounted) return;
       setError('Không tìm thấy token. Vui lòng đăng nhập.');
@@ -37,20 +42,38 @@ const VocabularyPage = () => {
       return;
     }
 
-    // try to get userId from localStorage or decode from JWT payload
-    let userId = localStorage.getItem('userId') || null;
+    // Lấy userId từ localStorage.user
+    let userId = null;
+    if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+      try {
+        const user = JSON.parse(userStr);
+        userId = user?.id;
+        console.log('✅ VocabularyPage - Parsed userId:', userId);
+      } catch (e) {
+        console.error('❌ VocabularyPage - Error parsing user:', e);
+      }
+    }
+
+    // Fallback: decode từ JWT nếu không có user trong localStorage
     if (!userId) {
       try {
         const parts = token.split('.');
         if (parts.length === 3) {
           const payload = JSON.parse(atob(parts[1]));
           userId = payload.userId || payload.sub || payload.id || null;
+          console.log('⚠️ VocabularyPage - userId from JWT:', userId);
         }
       } catch (e) {
-        
+        console.error('❌ VocabularyPage - Error decoding JWT:', e);
       }
     }
-    userId = userId || 1; 
+
+    if (!userId) {
+      if (!mounted) return;
+      setError('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+      setLoading(false);
+      return;
+    } 
 
     fetch(`http://localhost:8088/api/v1/vocab/stats/${userId}`, {
       headers: {

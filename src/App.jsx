@@ -3,8 +3,11 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom'
 import OAuth2RedirectHandler from './service/OAuth2RedirectHandler';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
+import useTokenRefresh from './hooks/useTokenRefresh';
 
 function App() {
+  // Tự động refresh token trước khi hết hạn
+  useTokenRefresh();
   
   const allPages = [...PublicPage, ...PrivatePage];
 

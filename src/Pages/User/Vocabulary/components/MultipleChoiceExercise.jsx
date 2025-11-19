@@ -7,161 +7,141 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showResult, setShowResult] = useState(false);
-  const [score, setScore] = useState(0);
-  const [answeredQuestions, setAnsweredQuestions] = useState([]);
+  const [answeredQuestions, setAnsweredQuestions] = useState([]); // Lưu tất cả câu trả lời trong phiên
   const [isCompleted, setIsCompleted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState(null);
 
   const question = questions[currentQuestion];
 
-  // Kiểm tra câu hỏi hiện tại đã được trả lời chưa
-  const isQuestionAnswered = answeredQuestions.some(
-    (aq) => aq.questionId === question.id
-  );
+  // Kiểm tra câu hỏi hiện tại đã được trả lời trong phiên chưa
+  const currentAnswer = answeredQuestions.find((aq) => aq.questionId === question.id);
 
   const handleSelectAnswer = (index) => {
     if (showResult) return;
     setSelectedAnswer(index);
   };
 
-  // Kiểm tra nếu câu hỏi đã hoàn thành khi load
+  // Kiểm tra nếu câu hỏi đã hoàn thành khi load hoặc đã trả lời trong phiên
   React.useEffect(() => {
     // Reset state khi chuyển câu
-    setSelectedAnswer(null);
-    setShowResult(false);
-    setResult(null);
-
-    // Kiểm tra nếu câu hỏi đã hoàn thành từ backend
-    if (question.isCompleted) {
-      setShowResult(true);
-      setResult({
-        isCorrect: true,
-        correctAnswer: question.correctAnswer,
-        isAlreadyCompleted: true,
-        explanation: 'Bạn đã hoàn thành câu hỏi này rồi!'
-      });
-    }
-
-    // Kiểm tra nếu câu hỏi đã được trả lời trong session này
     const answered = answeredQuestions.find((aq) => aq.questionId === question.id);
+    
     if (answered) {
+      // Câu hỏi đã được trả lời trong phiên này
+      setSelectedAnswer(answered.selectedAnswerIndex);
       setShowResult(true);
-      setSelectedAnswer(answered.selectedAnswer);
-      setResult(answered.result);
+    } else {
+      // Câu hỏi mới chưa trả lời
+      setSelectedAnswer(null);
+      setShowResult(false);
     }
-  }, [currentQuestion, question.isCompleted, question.correctAnswer, question.id, answeredQuestions]);
+  }, [currentQuestion, question.id, answeredQuestions]);
 
-  // 💚 Step 3: Submit answer to API
-  const handleSubmit = async () => {
-    if (selectedAnswer === null || submitting) return;
+  // 💚 Kiểm tra câu trả lời (KHÔNG submit API ngay)
+  const handleSubmit = () => {
+    if (selectedAnswer === null) return;
 
-    // Ngăn submit nếu câu hỏi đã được trả lời
-    if (isQuestionAnswered) {
+    // Ngăn submit nếu câu hỏi đã được trả lời trong phiên
+    if (currentAnswer) {
       toast.warning('Bạn đã trả lời câu hỏi này rồi! Hãy chuyển sang câu tiếp theo.');
       return;
     }
 
-    try {
-      setSubmitting(true);
+    // Lấy đáp án người dùng chọn
+    const userAnswer = question.options[selectedAnswer];
+    const isCorrect = userAnswer === question.correctAnswer;
 
-      const userStr = localStorage.getItem('user');
-      const user = userStr ? JSON.parse(userStr) : null;
-      const userId = user?.id;
+    // Lưu câu trả lời vào phiên làm bài
+    const answerRecord = {
+      questionId: question.id,
+      question: question.question,
+      selectedAnswerIndex: selectedAnswer,
+      userAnswer: userAnswer,
+      correctAnswer: question.correctAnswer,
+      isCorrect: isCorrect,
+    };
 
-      if (!userId) {
-        toast.error('Vui lòng đăng nhập');
-        return;
-      }
+    setAnsweredQuestions([...answeredQuestions, answerRecord]);
+    setShowResult(true);
 
-      // Get user's answer text from options
-      const userAnswer = question.options[selectedAnswer];
-
-      const answerData = {
-        userId,
-        userAnswer,
-        exerciseType: 'Trắc nghiệm (Multiple Choice)',
-        typeId,
-        topicId
-      };
-
-      // Debug logging
-      console.log('📝 Submitting answer:', {
-        questionId: question.id,
-        userAnswer,
-        correctAnswer: question.correctAnswer,
-        answerData
-      });
-
-      const response = await submitExerciseAnswer(question.id, answerData);
-
-      // Debug response
-      console.log('📨 API Response:', response);
-
-      if (response.code === 1000 && response.result) {
-        const apiResult = response.result;
-        
-        // Kiểm tra nếu câu hỏi đã được hoàn thành trước đó
-        if (apiResult.isAlreadyCompleted) {
-          toast.info('Bạn đã hoàn thành câu hỏi này rồi!');
-          setResult(apiResult);
-          setShowResult(true);
-          
-          // Lưu vào answeredQuestions để không cho làm lại
-          setAnsweredQuestions([
-            ...answeredQuestions,
-            {
-              questionId: question.id,
-              isCorrect: apiResult.isCorrect,
-              selectedAnswer,
-              result: apiResult,
-              isAlreadyCompleted: true
-            },
-          ]);
-          return;
-        }
-        
-        setResult(apiResult);
-        setShowResult(true);
-
-        // Update score if correct (chỉ cộng điểm nếu chưa hoàn thành)
-        if (apiResult.isCorrect && !apiResult.isAlreadyCompleted) {
-          setScore(score + 1);
-          toast.success(`Chính xác! +${apiResult.xpEarned} XP`);
-        } else if (!apiResult.isCorrect) {
-          toast.error(`Chưa đúng! Đáp án đúng: ${apiResult.correctAnswer}`);
-        }
-
-        // Track answered questions
-        setAnsweredQuestions([
-          ...answeredQuestions,
-          {
-            questionId: question.id,
-            isCorrect: apiResult.isCorrect,
-            selectedAnswer,
-            result: apiResult,
-            isAlreadyCompleted: false
-          },
-        ]);
-      } else {
-        throw new Error(response.message || 'Không thể gửi câu trả lời');
-      }
-    } catch (err) {
-      console.error('Error submitting answer:', err);
-      toast.error(err.message || 'Có lỗi xảy ra khi gửi câu trả lời');
-    } finally {
-      setSubmitting(false);
+    // Hiển thị thông báo ngay lập tức
+    if (isCorrect) {
+      toast.success('Chính xác!');
+    } else {
+      toast.error(`Chưa đúng! Đáp án đúng: ${question.correctAnswer}`);
     }
   };
 
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
-      setSelectedAnswer(null);
-      setShowResult(false);
-      setResult(null);
     } else {
+      // Hoàn thành tất cả câu hỏi → submit tổng kết
       setIsCompleted(true);
+      submitSessionResults();
+    }
+  };
+
+  // 📤 Submit tổng kết phiên làm bài lên API
+  const submitSessionResults = async () => {
+    try {
+      setSubmitting(true);
+
+      // Lấy thông tin user từ localStorage với xử lý lỗi
+      const userStr = localStorage.getItem('user');
+      let user = null;
+      let userId = null;
+
+      if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+        try {
+          user = JSON.parse(userStr);
+          userId = user?.id;
+        } catch (parseError) {
+          console.error('Error parsing user data:', parseError);
+        }
+      }
+
+      if (!userId) {
+        console.warn('User not logged in, skipping API submission');
+        return;
+      }
+
+      // Tính toán thống kê
+      const correctCount = answeredQuestions.filter((aq) => aq.isCorrect).length;
+      const totalQuestions = questions.length;
+
+      console.log('📊 Session completed:', {
+        userId,
+        topicId,
+        typeId,
+        totalQuestions,
+        correctCount,
+        answeredQuestions,
+      });
+
+      // Gửi từng câu trả lời lên API
+      for (const answer of answeredQuestions) {
+        const answerData = {
+          userId,
+          userAnswer: answer.userAnswer,
+          exerciseType: 'Trắc nghiệm (Multiple Choice)',
+          typeId,
+          topicId,
+        };
+
+        try {
+          await submitExerciseAnswer(answer.questionId, answerData);
+        } catch (err) {
+          console.error(`Failed to submit answer for question ${answer.questionId}:`, err);
+        }
+      }
+
+      toast.success('Đã lưu kết quả bài tập!');
+    } catch (err) {
+      console.error('Error submitting session results:', err);
+      toast.error('Không thể lưu kết quả bài tập');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -169,14 +149,29 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
     setCurrentQuestion(0);
     setSelectedAnswer(null);
     setShowResult(false);
-    setScore(0);
     setAnsweredQuestions([]);
     setIsCompleted(false);
-    setResult(null);
+    setSubmitting(false);
+  };
+
+  // 📊 Tính toán kết quả phiên làm bài
+  const calculateSessionStats = () => {
+    const correctCount = answeredQuestions.filter((aq) => aq.isCorrect).length;
+    const totalAnswered = answeredQuestions.length;
+    const totalQuestions = questions.length;
+    const percentage = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+
+    return {
+      correctCount,
+      totalAnswered,
+      totalQuestions,
+      percentage,
+    };
   };
 
   if (isCompleted) {
-    const percentage = Math.round((score / questions.length) * 100);
+    const stats = calculateSessionStats();
+    
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 max-w-2xl mx-auto">
         <div className="text-center space-y-6">
@@ -190,34 +185,62 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
           <div className="flex items-center justify-center gap-8 py-4">
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-1">
-                {score}/{questions.length}
+                {stats.correctCount}/{stats.totalQuestions}
               </div>
               <div className="text-xs text-gray-500">Câu đúng</div>
             </div>
             <div className="w-px h-12 bg-gray-200" />
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 mb-1">{percentage}%</div>
+              <div className="text-3xl font-bold text-green-600 mb-1">{stats.percentage}%</div>
               <div className="text-xs text-gray-500">Chính xác</div>
             </div>
-            {result?.totalXp && (
-              <>
-                <div className="w-px h-12 bg-gray-200" />
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary mb-1">{result.totalXp}</div>
-                  <div className="text-xs text-gray-500">Tổng XP</div>
-                </div>
-              </>
-            )}
           </div>
+          
+          {/* Chi tiết các câu trả lời */}
+          <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">Chi tiết bài làm:</h4>
+            <div className="space-y-2">
+              {answeredQuestions.map((answer, index) => (
+                <div
+                  key={answer.questionId}
+                  className={`flex items-center gap-3 p-3 rounded-lg ${
+                    answer.isCorrect ? 'bg-green-50' : 'bg-red-50'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    answer.isCorrect ? 'bg-green-500' : 'bg-red-500'
+                  }`}>
+                    {answer.isCorrect ? (
+                      <Check className="w-4 h-4 text-white" />
+                    ) : (
+                      <X className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium text-gray-900">
+                      Câu {index + 1}: {answer.question}
+                    </p>
+                    {!answer.isCorrect && (
+                      <p className="text-xs text-red-700 mt-1">
+                        Bạn chọn: {answer.userAnswer} → Đúng: {answer.correctAnswer}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-primary to-green-500 transition-all duration-500"
-              style={{ width: `${percentage}%` }}
+              style={{ width: `${stats.percentage}%` }}
             />
           </div>
           <button
             onClick={handleReset}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all shadow-sm hover:shadow-md text-sm font-medium"
+            disabled={submitting}
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all shadow-sm hover:shadow-md text-sm font-medium disabled:opacity-50"
           >
             <RotateCw className="w-4 h-4" />
             Làm lại
@@ -237,13 +260,13 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
               Câu {currentQuestion + 1}/{questions.length}
             </span>
             <span className="text-sm font-medium text-primary">
-              {score} điểm
+              {answeredQuestions.filter(aq => aq.isCorrect).length}/{answeredQuestions.length} đúng
             </span>
           </div>
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-300"
-              style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
+              style={{ width: `${(answeredQuestions.length / questions.length) * 100}%` }}
             />
           </div>
         </div>
@@ -265,8 +288,8 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {question.options && question.options.map((option, index) => {
             const isSelected = selectedAnswer === index;
-            const isCorrect = showResult && result && option === result.correctAnswer;
-            const showWrong = showResult && isSelected && !result?.isCorrect;
+            const isCorrect = showResult && currentAnswer && option === currentAnswer.correctAnswer;
+            const showWrong = showResult && isSelected && !currentAnswer?.isCorrect;
 
             return (
               <button
@@ -311,20 +334,16 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
         </div>
 
         {/* Explanation (if available after submit) */}
-        {showResult && result?.explanation && (
+        {showResult && currentAnswer && (
           <div className={`p-4 rounded-lg ${
-            result.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+            currentAnswer.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
           }`}>
-            <div className="flex items-center justify-between">
-              <p className={`text-sm ${result.isCorrect ? 'text-green-800' : 'text-red-800'}`}>
-                {result.explanation}
-              </p>
-              {result.isAlreadyCompleted && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2 whitespace-nowrap">
-                  Đã hoàn thành
-                </span>
-              )}
-            </div>
+            <p className={`text-sm ${currentAnswer.isCorrect ? 'text-green-800' : 'text-red-800'}`}>
+              {currentAnswer.isCorrect 
+                ? '✅ Chính xác!' 
+                : `❌ Chưa đúng! Đáp án đúng là: ${currentAnswer.correctAnswer}`
+              }
+            </p>
           </div>
         )}
 
@@ -348,15 +367,10 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
           {!showResult ? (
             <button
               onClick={handleSubmit}
-              disabled={selectedAnswer === null || submitting || isQuestionAnswered}
+              disabled={selectedAnswer === null || currentAnswer}
               className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md text-sm font-medium"
             >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Đang kiểm tra...
-                </>
-              ) : isQuestionAnswered ? (
+              {currentAnswer ? (
                 <>
                   <Check className="w-4 h-4" />
                   Đã trả lời

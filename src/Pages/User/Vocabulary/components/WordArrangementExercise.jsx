@@ -8,56 +8,40 @@ const WordArrangementExercise = ({ questions, topicId, typeId }) => {
   const [selectedLetters, setSelectedLetters] = useState([]);
   const [availableLetters, setAvailableLetters] = useState([]);
   const [showResult, setShowResult] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [score, setScore] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState(null);
-  const [answeredQuestions, setAnsweredQuestions] = useState([]); // Track đã submit
+  const [answeredQuestions, setAnsweredQuestions] = useState([]); // Lưu tất cả câu trả lời trong phiên
 
   // New: control hint visibility
   const [showHint, setShowHint] = useState(false);
 
   const question = questions[currentQuestion];
   
-  // Kiểm tra câu hỏi hiện tại đã được trả lời chưa
-  const isQuestionAnswered = answeredQuestions.some(
-    (aq) => aq.questionId === question.id
-  );
+  // Kiểm tra câu hỏi hiện tại đã được trả lời trong phiên chưa
+  const currentAnswer = answeredQuestions.find((aq) => aq.questionId === question.id);
 
   useEffect(() => {
     // Shuffle letters when question changes
     const shuffled = [...question.scrambledLetters].sort(() => Math.random() - 0.5);
     setAvailableLetters(shuffled);
     setSelectedLetters([]);
-    setShowResult(false);
-    setIsCorrect(false);
-    setResult(null);
-
-    // Reset hint visibility when question changes
     setShowHint(false);
 
-    // Kiểm tra nếu câu hỏi đã hoàn thành từ backend (isCompleted từ API)
-    if (question.isCompleted) {
-      setShowResult(true);
-      setIsCorrect(true);
-      setResult({
-        isCorrect: true,
-        correctAnswer: question.correctWord,
-        isAlreadyCompleted: true,
-        explanation: 'Bạn đã hoàn thành câu hỏi này rồi!'
-      });
-    }
-
-    // Kiểm tra nếu câu hỏi đã được trả lời trong session này
+    // Kiểm tra nếu câu hỏi đã được trả lời trong phiên này
     const answered = answeredQuestions.find((aq) => aq.questionId === question.id);
     if (answered) {
       setShowResult(true);
-      setIsCorrect(answered.isCorrect);
-      setResult(answered.result);
-      // Không cần shuffle letters vì đã trả lời rồi
+      // Hiển thị từ đã trả lời
+      const answeredLetters = answered.userAnswer.split('').map((letter, idx) => ({
+        letter,
+        originalIndex: idx
+      }));
+      setSelectedLetters(answeredLetters);
+      setAvailableLetters([]);
+    } else {
+      setShowResult(false);
     }
-  }, [currentQuestion, question.isCompleted, question.correctWord, question.scrambledLetters, question.id, answeredQuestions]);
+  }, [currentQuestion, question.scrambledLetters, question.id, answeredQuestions]);
 
   const handleSelectLetter = (letter, index) => {
     setSelectedLetters([...selectedLetters, { letter, originalIndex: index }]);
@@ -76,106 +60,37 @@ const WordArrangementExercise = ({ questions, topicId, typeId }) => {
     setShowResult(false);
   };
 
-  // 💚 Step 3: Submit answer to API
-  const handleSubmit = async () => {
-    if (selectedLetters.length === 0 || submitting) return;
+  // 💚 Kiểm tra câu trả lời (KHÔNG submit API ngay)
+  const handleSubmit = () => {
+    if (selectedLetters.length === 0) return;
 
-    // Ngăn submit nếu câu hỏi đã được trả lời
-    if (isQuestionAnswered) {
+    // Ngăn submit nếu câu hỏi đã được trả lời trong phiên
+    if (currentAnswer) {
       toast.warning('Bạn đã trả lời câu hỏi này rồi! Hãy chuyển sang câu tiếp theo.');
       return;
     }
 
-    try {
-      setSubmitting(true);
+    // Build user answer from selected letters
+    const userAnswer = selectedLetters.map((item) => item.letter).join('');
+    const isCorrect = userAnswer.toLowerCase() === question.correctWord.toLowerCase();
 
-      const userStr = localStorage.getItem('user');
-      const user = userStr ? JSON.parse(userStr) : null;
-      const userId = user?.id;
+    // Lưu câu trả lời vào phiên làm bài
+    const answerRecord = {
+      questionId: question.id,
+      question: question.question,
+      userAnswer: userAnswer,
+      correctAnswer: question.correctWord,
+      isCorrect: isCorrect,
+    };
 
-      if (!userId) {
-        toast.error('Vui lòng đăng nhập');
-        return;
-      }
+    setAnsweredQuestions([...answeredQuestions, answerRecord]);
+    setShowResult(true);
 
-      // Build user answer from selected letters
-      const userAnswer = selectedLetters.map((item) => item.letter).join('');
-
-      const answerData = {
-        userId,
-        userAnswer,
-        exerciseType: 'Sắp xếp từ (Word Scramble)',
-        typeId,
-        topicId
-      };
-
-      // Debug logging
-      console.log('📝 Submitting word arrangement answer:', {
-        questionId: question.id,
-        userAnswer,
-        correctWord: question.correctWord,
-        answerData
-      });
-
-      const response = await submitExerciseAnswer(question.id, answerData);
-
-      // Debug response
-      console.log('📨 API Response:', response);
-
-      if (response.code === 1000 && response.result) {
-        const apiResult = response.result;
-        
-        // Kiểm tra nếu câu hỏi đã được hoàn thành trước đó
-        if (apiResult.isAlreadyCompleted) {
-          toast.info('Bạn đã hoàn thành câu hỏi này rồi!');
-          setResult(apiResult);
-          setIsCorrect(apiResult.isCorrect);
-          setShowResult(true);
-          
-          // Lưu vào answeredQuestions để không cho làm lại
-          setAnsweredQuestions([
-            ...answeredQuestions,
-            {
-              questionId: question.id,
-              isCorrect: apiResult.isCorrect,
-              result: apiResult,
-              isAlreadyCompleted: true
-            }
-          ]);
-          return;
-        }
-        
-        setResult(apiResult);
-        setIsCorrect(apiResult.isCorrect);
-        setShowResult(true);
-        
-        // Cộng điểm và lưu vào answeredQuestions
-        if (apiResult.isCorrect && !apiResult.isAlreadyCompleted) {
-          setScore(score + 1);
-          toast.success(`Chính xác! +${apiResult.xpEarned} XP`);
-        } else if (!apiResult.isCorrect) {
-          toast.error(`Chưa đúng! Đáp án đúng: ${apiResult.correctAnswer}`);
-        }
-
-        // Track câu hỏi đã trả lời
-        setAnsweredQuestions([
-          ...answeredQuestions,
-          {
-            questionId: question.id,
-            isCorrect: apiResult.isCorrect,
-            result: apiResult,
-            userAnswer,
-            isAlreadyCompleted: false
-          }
-        ]);
-      } else {
-        throw new Error(response.message || 'Không thể gửi câu trả lời');
-      }
-    } catch (err) {
-      console.error('Error submitting answer:', err);
-      toast.error(err.message || 'Có lỗi xảy ra khi gửi câu trả lời');
-    } finally {
-      setSubmitting(false);
+    // Hiển thị thông báo ngay lập tức
+    if (isCorrect) {
+      toast.success('Chính xác!');
+    } else {
+      toast.error(`Chưa đúng! Đáp án đúng: ${question.correctWord}`);
     }
   };
 
@@ -183,21 +98,102 @@ const WordArrangementExercise = ({ questions, topicId, typeId }) => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
+      // Hoàn thành tất cả câu hỏi → submit tổng kết
       setIsCompleted(true);
+      submitSessionResults();
+    }
+  };
+
+  // 📤 Submit tổng kết phiên làm bài lên API
+  const submitSessionResults = async () => {
+    try {
+      setSubmitting(true);
+
+      // Lấy thông tin user từ localStorage với xử lý lỗi
+      const userStr = localStorage.getItem('user');
+      let user = null;
+      let userId = null;
+
+      if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+        try {
+          user = JSON.parse(userStr);
+          userId = user?.id;
+        } catch (parseError) {
+          console.error('Error parsing user data:', parseError);
+        }
+      }
+
+      if (!userId) {
+        console.warn('User not logged in, skipping API submission');
+        return;
+      }
+
+      // Tính toán thống kê
+      const correctCount = answeredQuestions.filter((aq) => aq.isCorrect).length;
+      const totalQuestions = questions.length;
+
+      console.log('📊 Session completed:', {
+        userId,
+        topicId,
+        typeId,
+        totalQuestions,
+        correctCount,
+        answeredQuestions,
+      });
+
+      // Gửi từng câu trả lời lên API
+      for (const answer of answeredQuestions) {
+        const answerData = {
+          userId,
+          userAnswer: answer.userAnswer,
+          exerciseType: 'Sắp xếp từ (Word Scramble)',
+          typeId,
+          topicId,
+        };
+
+        try {
+          await submitExerciseAnswer(answer.questionId, answerData);
+        } catch (err) {
+          console.error(`Failed to submit answer for question ${answer.questionId}:`, err);
+        }
+      }
+
+      toast.success('Đã lưu kết quả bài tập!');
+    } catch (err) {
+      console.error('Error submitting session results:', err);
+      toast.error('Không thể lưu kết quả bài tập');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleReset = () => {
     setCurrentQuestion(0);
-    setScore(0);
-    setIsCompleted(false);
     setSelectedLetters([]);
     setShowResult(false);
-    setResult(null);
+    setAnsweredQuestions([]);
+    setIsCompleted(false);
+    setSubmitting(false);
+  };
+
+  // 📊 Tính toán kết quả phiên làm bài
+  const calculateSessionStats = () => {
+    const correctCount = answeredQuestions.filter((aq) => aq.isCorrect).length;
+    const totalAnswered = answeredQuestions.length;
+    const totalQuestions = questions.length;
+    const percentage = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+
+    return {
+      correctCount,
+      totalAnswered,
+      totalQuestions,
+      percentage,
+    };
   };
 
   if (isCompleted) {
-    const percentage = Math.round((score / questions.length) * 100);
+    const stats = calculateSessionStats();
+    
     return (
       <div className="bg-white rounded-lg border-2 border-gray-100 p-8">
         <div className="text-center space-y-6">
@@ -214,29 +210,60 @@ const WordArrangementExercise = ({ questions, topicId, typeId }) => {
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Số câu đúng:</span>
               <span className="text-2xl font-bold text-purple-600">
-                {score}/{questions.length}
+                {stats.correctCount}/{stats.totalQuestions}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Độ chính xác:</span>
-              <span className="text-2xl font-bold text-purple-600">{percentage}%</span>
+              <span className="text-2xl font-bold text-purple-600">{stats.percentage}%</span>
             </div>
-            {result?.totalXp && (
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Tổng XP:</span>
-                <span className="text-2xl font-bold text-purple-600">{result.totalXp}</span>
-              </div>
-            )}
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-4">
               <div
                 className="h-full bg-gradient-to-r from-purple-500 to-purple-400 transition-all duration-500"
-                style={{ width: `${percentage}%` }}
+                style={{ width: `${stats.percentage}%` }}
               />
             </div>
           </div>
+
+          {/* Chi tiết các câu trả lời */}
+          <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">Chi tiết bài làm:</h4>
+            <div className="space-y-2">
+              {answeredQuestions.map((answer, index) => (
+                <div
+                  key={answer.questionId}
+                  className={`flex items-center gap-3 p-3 rounded-lg ${
+                    answer.isCorrect ? 'bg-green-50' : 'bg-red-50'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    answer.isCorrect ? 'bg-green-500' : 'bg-red-500'
+                  }`}>
+                    {answer.isCorrect ? (
+                      <Check className="w-4 h-4 text-white" />
+                    ) : (
+                      <X className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium text-gray-900">
+                      Câu {index + 1}: {answer.question}
+                    </p>
+                    {!answer.isCorrect && (
+                      <p className="text-xs text-red-700 mt-1">
+                        Bạn chọn: {answer.userAnswer} → Đúng: {answer.correctAnswer}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <button
             onClick={handleReset}
-            className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all mx-auto shadow-md hover:shadow-lg"
+            disabled={submitting}
+            className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all mx-auto shadow-md hover:shadow-lg disabled:opacity-50"
           >
             <RotateCw className="w-5 h-5" />
             Làm lại
@@ -255,13 +282,13 @@ const WordArrangementExercise = ({ questions, topicId, typeId }) => {
             Câu {currentQuestion + 1} / {questions.length}
           </span>
           <span className="text-sm text-gray-500">
-            Điểm: {score}/{questions.length}
+            {answeredQuestions.filter(aq => aq.isCorrect).length}/{answeredQuestions.length} đúng
           </span>
         </div>
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-purple-500 to-purple-400 transition-all duration-300"
-            style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
+            style={{ width: `${(answeredQuestions.length / questions.length) * 100}%` }}
           />
         </div>
       </div>
@@ -313,7 +340,7 @@ const WordArrangementExercise = ({ questions, topicId, typeId }) => {
           <div
             className={`min-h-[80px] p-4 rounded-lg border-2 transition-all ${
               showResult
-                ? isCorrect
+                ? currentAnswer?.isCorrect
                   ? 'border-green-500 bg-green-50'
                   : 'border-red-500 bg-red-50'
                 : 'border-gray-300 bg-gray-50'
@@ -360,34 +387,24 @@ const WordArrangementExercise = ({ questions, topicId, typeId }) => {
         </div>
 
         {/* Result Message */}
-        {showResult && result && (
+        {showResult && currentAnswer && (
           <div
             className={`p-4 rounded-lg flex items-start gap-3 ${
-              isCorrect
+              currentAnswer.isCorrect
                 ? 'bg-green-50 border-2 border-green-200'
                 : 'bg-red-50 border-2 border-red-200'
             }`}
           >
-            {isCorrect ? (
+            {currentAnswer.isCorrect ? (
               <>
                 <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <Check className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="font-bold text-green-800">Chính xác!</p>
-                    {result.isAlreadyCompleted && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 whitespace-nowrap">
-                        Đã hoàn thành
-                      </span>
-                    )}
-                  </div>
+                  <p className="font-bold text-green-800">Chính xác!</p>
                   <p className="text-sm text-green-700">
-                    Từ đúng là: <strong>{result.correctAnswer}</strong>
+                    Từ đúng là: <strong>{currentAnswer.correctAnswer}</strong>
                   </p>
-                  {result.explanation && (
-                    <p className="text-sm text-green-600 mt-1">{result.explanation}</p>
-                  )}
                 </div>
               </>
             ) : (
@@ -396,20 +413,10 @@ const WordArrangementExercise = ({ questions, topicId, typeId }) => {
                   <X className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="font-bold text-red-800">Chưa đúng!</p>
-                    {result.isAlreadyCompleted && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 whitespace-nowrap">
-                        Đã hoàn thành
-                      </span>
-                    )}
-                  </div>
+                  <p className="font-bold text-red-800">Chưa đúng!</p>
                   <p className="text-sm text-red-700">
-                    Từ đúng là: <strong>{result.correctAnswer}</strong>
+                    Từ đúng là: <strong>{currentAnswer.correctAnswer}</strong>
                   </p>
-                  {result.explanation && (
-                    <p className="text-sm text-red-600 mt-1">{result.explanation}</p>
-                  )}
                 </div>
               </>
             )}
@@ -446,15 +453,10 @@ const WordArrangementExercise = ({ questions, topicId, typeId }) => {
             {!showResult ? (
               <button
                 onClick={handleSubmit}
-                disabled={selectedLetters.length === 0 || submitting || isQuestionAnswered}
+                disabled={selectedLetters.length === 0 || currentAnswer}
                 className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
               >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Đang kiểm tra...
-                  </>
-                ) : isQuestionAnswered ? (
+                {currentAnswer ? (
                   <>
                     <Check className="w-5 h-5" />
                     Đã trả lời

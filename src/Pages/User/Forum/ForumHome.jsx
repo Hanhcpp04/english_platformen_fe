@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Link,useNavigate } from "react-router-dom";
-import PostList from "../../../components/Popups/forum/PostCard";
+import PostList from "../../../components/Popups/forum/PostList";
 import ForumHeader from "../../../components/Popups/forum/ForumHeader";
 import ForumSidebar from "../../../components/Popups/forum/ForumSidebar";
 import FilterBar from "../../../components/Popups/forum/FilterBar";
