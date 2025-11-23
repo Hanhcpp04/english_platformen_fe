@@ -118,6 +118,7 @@ const UserAvatar = () => {
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        id="user-avatar-button"
       >
         <div className="relative">
           {user.avatar ? (
@@ -160,7 +161,13 @@ const UserAvatar = () => {
 
       {/* Dropdown Menu */}
       {isDropdownOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 animate-in slide-in-from-top-2 duration-200">
+        <div 
+          className="fixed w-64 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-[9999] animate-in slide-in-from-top-2 duration-200"
+          style={{
+            top: `${dropdownRef.current?.getBoundingClientRect().bottom + 8}px`,
+            right: `${window.innerWidth - dropdownRef.current?.getBoundingClientRect().right}px`
+          }}
+        >
           {/* User Info Section */}
           <div className="px-4 py-3 border-b border-gray-200">
             <div className="flex items-center gap-3">

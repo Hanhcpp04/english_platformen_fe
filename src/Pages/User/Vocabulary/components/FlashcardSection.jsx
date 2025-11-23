@@ -77,7 +77,7 @@ const FlashcardSection = ({ vocabularies, topicId }) => {
 
       const response = await completeVocabulary(userId, currentCard.id, topicId);
 
-      if (response?.code === 200 || response?.success === true) {
+      if (response?.code === 1000 || response?.code === 200 || response?.success === true) {
         setCompletedWords(prev => prev.includes(currentCard.id) ? prev : [...prev, currentCard.id]);
         toast.success(`Đã hoàn thành từ "${currentCard.word}" (+${currentCard.xpReward || 5} XP)`);
         setTimeout(() => {

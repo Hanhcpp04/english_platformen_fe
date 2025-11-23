@@ -119,7 +119,7 @@ const VocabularyDetail = () => {
         // Fetch vocabulary from API
         const response = await getVocabularyByTopic(topicId, userId);
 
-        if (response.code === 200 && response.result) {
+        if ((response.code === 1000 || response.code === 200) && response.result) {
           const vocabList = response.result;
 
           // Transform API data to match component format

@@ -40,11 +40,34 @@ request.interceptors.request.use(
 // Response Interceptor - Xử lý refresh token khi gặp lỗi 401
 request.interceptors.response.use(
   (response) => {
+    // Kiểm tra code trong response body (business logic error)
+    const data = response.data;
+    
+    // Success codes: 1000 (business success) hoặc 200 (HTTP success)
+    // Error codes: 404 (not found), 9999 (general error), hoặc các code khác
+    if (data && typeof data.code === 'number' && data.code !== 1000 && data.code !== 200) {
+      const errorMessage = data.message || 'Có lỗi xảy ra';
+      
+      // Hiển thị toast lỗi
+      toast.error(errorMessage);
+      
+      // Throw error để code gọi API có thể catch
+      const error = new Error(errorMessage);
+      error.response = response;
+      error.businessError = true;
+      error.code = data.code;
+      
+      return Promise.reject(error);
+    }
+    
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
-    
+     if (error.response?.data?.message) {
+      // Hiện toast lỗi chung (chỉ cho HTTP error, không phải business error)
+      toast.error(error.response.data.message);
+    }
     // Kiểm tra nếu lỗi 401 và chưa retry
     if (error.response?.status === 401 && !originalRequest._retry) {
       
@@ -175,7 +198,7 @@ request.interceptors.response.use(
         toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
         window.location.href = '/login';
         
-        return Promise.reject(refreshError);
+        return Promise.reject(error.response?.data || error);
       }
     }
     

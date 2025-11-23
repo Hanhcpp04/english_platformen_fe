@@ -77,7 +77,7 @@ const GrammarDetailPage = () => {
         const response = await getTopicLessons(topicId, userId);
         console.log('API Response:', response);
         
-        if (response.code === 1000 && response.result) {
+        if ((response.code === 1000 || response.code === 200) && response.result) {
           const { lessons: lessonsList, summary: summaryData } = response.result;
           
           setLessons(lessonsList || []);
@@ -170,7 +170,7 @@ const GrammarDetailPage = () => {
 
       console.log('Complete lesson response:', response);
 
-      if (response.code === 1000 && response.result) {
+      if ((response.code === 1000 || response.code === 200) && response.result) {
         // Update local state
         setLessons(prevLessons => 
           prevLessons.map(lesson => 

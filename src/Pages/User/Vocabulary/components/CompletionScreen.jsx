@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, RotateCcw, ArrowRight, Eye } from 'lucide-react';
+import { Award, RotateCcw, ArrowRight } from 'lucide-react';
 
 const CompletionScreen = ({ score, onReset, onReview, onBack }) => {
   return (
@@ -37,12 +37,12 @@ const CompletionScreen = ({ score, onReset, onReview, onBack }) => {
             </div>
           </div>
 
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-4 justify-center flex-wrap">
             <button
               onClick={onReview}
               className="flex items-center gap-2 px-6 py-3 border-2 border-green-600 text-green-600 rounded-lg font-medium hover:bg-green-50"
             >
-              <Eye className="w-5 h-5" />
+              <Award className="w-5 h-5" />
               Xem lại bài làm
             </button>
             <button
@@ -56,7 +56,7 @@ const CompletionScreen = ({ score, onReset, onReview, onBack }) => {
               onClick={onBack}
               className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
             >
-              Quay lại
+              Quay lại chủ đề
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>

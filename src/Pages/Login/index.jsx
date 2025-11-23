@@ -13,18 +13,78 @@ const Login = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({
+    email: '',
+    password: ''
+  });
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: newValue
     }));
+    
+    // Validate field on change
+    validateField(name, newValue);
+  };
+
+  const validateField = (name, value) => {
+    let error = '';
+    
+    switch(name) {
+      case 'email':
+        if (!value.trim()) {
+          error = 'Email không được để trống';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          error = 'Email không hợp lệ';
+        }
+        break;
+      
+      case 'password':
+        if (!value) {
+          error = 'Mật khẩu không được để trống';
+        } else if (value.length < 6) {
+          error = 'Mật khẩu phải có ít nhất 6 ký tự';
+        }
+        break;
+    }
+    
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+    
+    // Validate email
+    validateField('email', formData.email);
+    if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      isValid = false;
+    }
+    
+    // Validate password
+    validateField('password', formData.password);
+    if (!formData.password || formData.password.length < 6) {
+      isValid = false;
+    }
+    
+    return isValid;
   };
 
  const handleSubmit = async (e) => {
   e.preventDefault();
+  
+  // Validate form
+  if (!validateForm()) {
+    return;
+  }
+  
   setIsLoading(true);
   setError(""); 
   const { email, password } = formData; 
@@ -133,9 +193,14 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 ${
+                  errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'
+                }`}
                 placeholder="Nhập email của bạn"
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -151,7 +216,9 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
+                  className={`w-full px-4 py-3 pr-12 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 ${
+                    errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'
+                  }`}
                   placeholder="Nhập mật khẩu"
                 />
                 <button
@@ -170,8 +237,10 @@ const Login = () => {
                     </svg>
                   )}
                 </button>
-                {error && <p className="text-red-500 mb-4">{error}</p>}
               </div>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
             </div>
 
             {/* Remember Me & Forgot Password */}

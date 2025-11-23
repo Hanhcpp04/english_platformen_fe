@@ -34,7 +34,7 @@ const GrammarPage = () => {
 
         const response = await getGrammarStats(userId);
         
-        if (response.code === 1000) {
+        if (response.code === 1000 || response.code === 200) {
           setGrammarData(response.result);
         } else {
           setError('Không thể tải dữ liệu ngữ pháp');

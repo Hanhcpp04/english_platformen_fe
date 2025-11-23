@@ -201,7 +201,7 @@ CREATE TABLE user_grammar_progress (
     completed_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (lesson_id) REFERENCES grammar_lessons(id) ON DELETE CASCADE,
-    FOREIGN KEY (question_id) REFERENCES grammar_questions(id) ON DELETE SET NULL,
+    FOREIGN KEY (question_id) REFERENCES grammar_questions(id) ON DELETE SET NULL
     FOREIGN KEY (topic_id) REFERENCES grammar_topics(id) ON DELETE CASCADE,
     UNIQUE KEY unique_user_lesson_question_type (user_id, lesson_id, question_id, type),
     INDEX idx_user_topic (user_id, topic_id),

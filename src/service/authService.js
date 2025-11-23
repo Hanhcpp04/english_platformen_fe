@@ -1,9 +1,9 @@
 import { request } from "../service/request";
 import { toast } from "react-toastify";
 // register
-export const register = async ({ fullName, username, email, password }) => {
+export const register = async ({ fullname, username, email, password }) => {
   try {
-    const res = await request.post("auth/register", { fullName, username, email, password });
+    const res = await request.post("auth/register", { fullname, username, email, password });
     return res.data;
   } catch (err) {
     throw err.response?.data || err;
@@ -21,6 +21,8 @@ export const login = async ({ email, password }) => {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
+      localStorage.setItem('user', JSON.stringify(result));
+
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
       

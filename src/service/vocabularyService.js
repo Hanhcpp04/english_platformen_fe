@@ -108,3 +108,60 @@ export const submitExerciseAnswer = async (questionId, answerData) => {
     throw err.response?.data || err;
   }
 };
+
+/**
+ * 📜 Get exercise history (all answers for a specific topic/type)
+ * @param {number} userId - The user ID
+ * @param {number} topicId - The topic ID
+ * @param {number} typeId - The exercise type ID
+ * @returns {Promise} - API response with exercise history
+ */
+export const getExerciseHistory = async (userId, topicId, typeId) => {
+  try {
+    const res = await request.get(`vocab/exercise/history`, {
+      params: { userId, topicId, typeId }
+    });
+    return res.data;
+  } catch (err) {
+    console.error("Error fetching exercise history:", err);
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * 🔄 Reset exercise answers (delete all answers for a specific topic/type)
+ * @param {number} userId - The user ID
+ * @param {number} topicId - The topic ID
+ * @param {number} typeId - The exercise type ID
+ * @returns {Promise} - API response
+ */
+export const resetExerciseAnswers = async (userId, topicId, typeId) => {
+  try {
+    const res = await request.delete(`vocab/exercise/reset`, {
+      params: { userId, topicId, typeId }
+    });
+    return res.data;
+  } catch (err) {
+    console.error("Error resetting exercise answers:", err);
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * 📊 Get exercise accuracy statistics
+ * @param {number} userId - The user ID
+ * @param {number} topicId - The topic ID
+ * @param {number} typeId - The exercise type ID
+ * @returns {Promise} - API response with accuracy stats
+ */
+export const getExerciseAccuracy = async (userId, topicId, typeId) => {
+  try {
+    const res = await request.get(`vocab/exercise/accuracy`, {
+      params: { userId, topicId, typeId }
+    });
+    return res.data;
+  } catch (err) {
+    console.error("Error fetching exercise accuracy:", err);
+    throw err.response?.data || err;
+  }
+};

@@ -1,100 +1,116 @@
-import React, { useState } from 'react';
-import { Check, X, ChevronRight, RotateCw, Trophy, Loader2 } from 'lucide-react';
-import { submitExerciseAnswer } from '../../../../service/vocabularyService';
+import React, { useState, useEffect } from 'react';
+import { Check, X, ChevronRight, RotateCw, Trophy, Loader2, TrendingUp, Award, RotateCcw } from 'lucide-react';
+import { submitExerciseAnswer, getExerciseHistory, getExerciseAccuracy, resetExerciseAnswers } from '../../../../service/vocabularyService';
 import { toast } from 'react-toastify';
+import MultipleChoiceOptions from './MultipleChoiceOptions';
+import CompletionScreen from './CompletionScreen';
+import QuestionNavigator from './QuestionNavigator';
 
 const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [showResult, setShowResult] = useState(false);
-  const [answeredQuestions, setAnsweredQuestions] = useState([]); // Lưu tất cả câu trả lời trong phiên
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [answeredQuestions, setAnsweredQuestions] = useState({}); // { questionId: { userAnswer, correctAnswer, isCorrect } }
   const [submitting, setSubmitting] = useState(false);
+  const [accuracy, setAccuracy] = useState(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   const question = questions[currentQuestion];
+  const currentAnswer = answeredQuestions[question.id];
 
-  // Kiểm tra câu hỏi hiện tại đã được trả lời trong phiên chưa
-  const currentAnswer = answeredQuestions.find((aq) => aq.questionId === question.id);
+  // Load exercise history and accuracy on mount
+  useEffect(() => {
+    const loadExerciseData = async () => {
+      try {
+        setLoading(true);
+        const userStr = localStorage.getItem('user');
+        let userId = null;
 
-  const handleSelectAnswer = (index) => {
-    if (showResult) return;
-    setSelectedAnswer(index);
-  };
+        if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+          try {
+            const user = JSON.parse(userStr);
+            userId = user?.id;
+          } catch (parseError) {
+            console.error('Error parsing user data:', parseError);
+          }
+        }
 
-  // Kiểm tra nếu câu hỏi đã hoàn thành khi load hoặc đã trả lời trong phiên
-  React.useEffect(() => {
-    // Reset state khi chuyển câu
-    const answered = answeredQuestions.find((aq) => aq.questionId === question.id);
-    
-    if (answered) {
-      // Câu hỏi đã được trả lời trong phiên này
-      setSelectedAnswer(answered.selectedAnswerIndex);
-      setShowResult(true);
-    } else {
-      // Câu hỏi mới chưa trả lời
-      setSelectedAnswer(null);
-      setShowResult(false);
-    }
-  }, [currentQuestion, question.id, answeredQuestions]);
+        if (!userId) {
+          setLoading(false);
+          return;
+        }
 
-  // 💚 Kiểm tra câu trả lời (KHÔNG submit API ngay)
-  const handleSubmit = () => {
-    if (selectedAnswer === null) return;
+        // Load history from API
+        try {
+          const historyResponse = await getExerciseHistory(userId, topicId, typeId);
+          // API trả về result hoặc data
+          const history = historyResponse.result || historyResponse.data;
+          if ((historyResponse.code === 200 || historyResponse.code === 1000) && history) {
+            if (history.answers && history.answers.length > 0) {
+              const answersMap = {};
+              history.answers.forEach(answer => {
+                answersMap[answer.question_id] = {
+                  userAnswer: answer.user_answer,
+                  correctAnswer: answer.correct_answer,
+                  isCorrect: answer.is_correct,
+                };
+              });
+              setAnsweredQuestions(answersMap);
+              
+              // Tìm câu hỏi đầu tiên chưa trả lời hoặc câu cuối cùng đã làm
+              const firstUnansweredIndex = questions.findIndex(q => !answersMap[q.id]);
+              if (firstUnansweredIndex !== -1) {
+                // Có câu chưa trả lời -> nhảy đến câu đó
+                setCurrentQuestion(firstUnansweredIndex);
+              } else if (history.answers.length > 0) {
+                // Tất cả đã trả lời -> nhảy đến câu cuối cùng
+                const lastAnsweredId = history.answers[history.answers.length - 1].question_id;
+                const lastIndex = questions.findIndex(q => q.id === lastAnsweredId);
+                if (lastIndex !== -1) {
+                  setCurrentQuestion(lastIndex);
+                }
+              }
+            }
+          }
+        } catch (historyError) {
+          console.log('No previous history found');
+        }
 
-    // Ngăn submit nếu câu hỏi đã được trả lời trong phiên
-    if (currentAnswer) {
-      toast.warning('Bạn đã trả lời câu hỏi này rồi! Hãy chuyển sang câu tiếp theo.');
-      return;
-    }
-
-    // Lấy đáp án người dùng chọn
-    const userAnswer = question.options[selectedAnswer];
-    const isCorrect = userAnswer === question.correctAnswer;
-
-    // Lưu câu trả lời vào phiên làm bài
-    const answerRecord = {
-      questionId: question.id,
-      question: question.question,
-      selectedAnswerIndex: selectedAnswer,
-      userAnswer: userAnswer,
-      correctAnswer: question.correctAnswer,
-      isCorrect: isCorrect,
+        // Load accuracy from API
+        try {
+          const accuracyResponse = await getExerciseAccuracy(userId, topicId, typeId);
+          if ((accuracyResponse.code === 200 || accuracyResponse.code === 1000) && accuracyResponse.result) {
+            setAccuracy(accuracyResponse.result);
+          }
+        } catch (accuracyError) {
+          console.log('No accuracy data found');
+        }
+      } catch (error) {
+        console.error('Error loading exercise data:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setAnsweredQuestions([...answeredQuestions, answerRecord]);
-    setShowResult(true);
+    loadExerciseData();
+  }, [topicId, typeId, questions]);
 
-    // Hiển thị thông báo ngay lập tức
-    if (isCorrect) {
-      toast.success('Chính xác!');
-    } else {
-      toast.error(`Chưa đúng! Đáp án đúng: ${question.correctAnswer}`);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-    } else {
-      // Hoàn thành tất cả câu hỏi → submit tổng kết
-      setIsCompleted(true);
-      submitSessionResults();
-    }
-  };
-
-  // 📤 Submit tổng kết phiên làm bài lên API
-  const submitSessionResults = async () => {
+  // Submit answer immediately when user selects an option
+  const handleSelectAnswer = async (answerIndex) => {
+    // Nếu câu hỏi đã được trả lời rồi thì không cho chọn nữa
+    if (currentAnswer) return;
+    
+    const userAnswer = question.options[answerIndex];
+    
     try {
       setSubmitting(true);
-
-      // Lấy thông tin user từ localStorage với xử lý lỗi
+      
       const userStr = localStorage.getItem('user');
-      let user = null;
       let userId = null;
 
       if (userStr && userStr !== 'undefined' && userStr !== 'null') {
         try {
-          user = JSON.parse(userStr);
+          const user = JSON.parse(userStr);
           userId = user?.id;
         } catch (parseError) {
           console.error('Error parsing user data:', parseError);
@@ -102,62 +118,115 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
       }
 
       if (!userId) {
-        console.warn('User not logged in, skipping API submission');
+        toast.error('Vui lòng đăng nhập để làm bài tập');
         return;
       }
 
-      // Tính toán thống kê
-      const correctCount = answeredQuestions.filter((aq) => aq.isCorrect).length;
-      const totalQuestions = questions.length;
-
-      console.log('📊 Session completed:', {
+      // Submit answer to API
+      const answerData = {
         userId,
-        topicId,
+        userAnswer: userAnswer,
+        exerciseType: 'Trắc nghiệm (Multiple Choice)',
         typeId,
-        totalQuestions,
-        correctCount,
-        answeredQuestions,
-      });
+        topicId,
+      };
 
-      // Gửi từng câu trả lời lên API
-      for (const answer of answeredQuestions) {
-        const answerData = {
-          userId,
-          userAnswer: answer.userAnswer,
-          exerciseType: 'Trắc nghiệm (Multiple Choice)',
-          typeId,
-          topicId,
-        };
+      const response = await submitExerciseAnswer(question.id, answerData);
+      
+      const result = response.result || response.data || response;
+      const isCorrect = result.is_correct || result.isCorrect;
+      const correctAnswer = result.correct_answer || result.correctAnswer || question.correctAnswer;
 
-        try {
-          await submitExerciseAnswer(answer.questionId, answerData);
-        } catch (err) {
-          console.error(`Failed to submit answer for question ${answer.questionId}:`, err);
+      // Lưu câu trả lời vào state
+      setAnsweredQuestions(prev => ({
+        ...prev,
+        [question.id]: {
+          userAnswer: userAnswer,
+          correctAnswer: correctAnswer,
+          isCorrect: isCorrect,
         }
+      }));
+
+      // Hiển thị thông báo
+      if (isCorrect) {
+        toast.success(`Chính xác! +${result.xp_earned || 5} XP`);
+      } else {
+        toast.error(`Chưa đúng! Đáp án đúng: ${correctAnswer}`);
       }
 
-      toast.success('Đã lưu kết quả bài tập!');
-    } catch (err) {
-      console.error('Error submitting session results:', err);
-      toast.error('Không thể lưu kết quả bài tập');
+      // Reload accuracy
+      try {
+        const accuracyResponse = await getExerciseAccuracy(userId, topicId, typeId);
+        if ((accuracyResponse.code === 200 || accuracyResponse.code === 1000) && accuracyResponse.result) {
+          setAccuracy(accuracyResponse.result);
+        }
+      } catch (error) {
+        console.log('Could not update accuracy');
+      }
+    } catch (error) {
+      console.error('Error submitting answer:', error);
+      toast.error('Có lỗi xảy ra khi kiểm tra câu trả lời');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleReset = () => {
-    setCurrentQuestion(0);
-    setSelectedAnswer(null);
-    setShowResult(false);
-    setAnsweredQuestions([]);
-    setIsCompleted(false);
-    setSubmitting(false);
+  const handleNext = () => {
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    }
+    // Không chuyển sang màn hình completion nữa
   };
 
-  // 📊 Tính toán kết quả phiên làm bài
+  // Handle reset exercise (delete all answers via API)
+  const handleResetExercise = async () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      let userId = null;
+
+      if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+        try {
+          const user = JSON.parse(userStr);
+          userId = user?.id;
+        } catch (parseError) {
+          console.error('Error parsing user data:', parseError);
+        }
+      }
+
+      if (!userId) {
+        toast.error('Vui lòng đăng nhập để reset bài tập');
+        return;
+      }
+
+      await resetExerciseAnswers(userId, topicId, typeId);
+      
+      // Reset state
+      setCurrentQuestion(0);
+      setAnsweredQuestions({});
+      setShowResetConfirm(false);
+      
+      // Reload accuracy
+      try {
+        const accuracyResponse = await getExerciseAccuracy(userId, topicId, typeId);
+        if ((accuracyResponse.code === 200 || accuracyResponse.code === 1000) && accuracyResponse.result) {
+          setAccuracy(accuracyResponse.result);
+        }
+      } catch (error) {
+        setAccuracy(null);
+      }
+      
+      toast.success('Đã reset bài tập thành công!');
+    } catch (error) {
+      console.error('Error resetting exercise:', error);
+      toast.error('Có lỗi xảy ra khi reset bài tập');
+    }
+  };
+
+  // 📊 Tính toán kết quả từ dữ liệu API
   const calculateSessionStats = () => {
-    const correctCount = answeredQuestions.filter((aq) => aq.isCorrect).length;
-    const totalAnswered = answeredQuestions.length;
+    const answeredIds = Object.keys(answeredQuestions);
+    const correctCount = answeredIds.filter(id => answeredQuestions[id].isCorrect).length;
+    const totalAnswered = answeredIds.length;
     const totalQuestions = questions.length;
     const percentage = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
 
@@ -169,84 +238,40 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
     };
   };
 
-  if (isCompleted) {
-    const stats = calculateSessionStats();
-    
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 max-w-2xl mx-auto">
-        <div className="text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl">
-            <Trophy className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">Hoàn thành!</h3>
-            <p className="text-gray-500 text-sm">Chúc mừng bạn đã hoàn thành bài tập</p>
-          </div>
-          <div className="flex items-center justify-center gap-8 py-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-1">
-                {stats.correctCount}/{stats.totalQuestions}
-              </div>
-              <div className="text-xs text-gray-500">Câu đúng</div>
-            </div>
-            <div className="w-px h-12 bg-gray-200" />
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 mb-1">{stats.percentage}%</div>
-              <div className="text-xs text-gray-500">Chính xác</div>
-            </div>
-          </div>
-          
-          {/* Chi tiết các câu trả lời */}
-          <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">Chi tiết bài làm:</h4>
-            <div className="space-y-2">
-              {answeredQuestions.map((answer, index) => (
-                <div
-                  key={answer.questionId}
-                  className={`flex items-center gap-3 p-3 rounded-lg ${
-                    answer.isCorrect ? 'bg-green-50' : 'bg-red-50'
-                  }`}
-                >
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                    answer.isCorrect ? 'bg-green-500' : 'bg-red-500'
-                  }`}>
-                    {answer.isCorrect ? (
-                      <Check className="w-4 h-4 text-white" />
-                    ) : (
-                      <X className="w-4 h-4 text-white" />
-                    )}
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-medium text-gray-900">
-                      Câu {index + 1}: {answer.question}
-                    </p>
-                    {!answer.isCorrect && (
-                      <p className="text-xs text-red-700 mt-1">
-                        Bạn chọn: {answer.userAnswer} → Đúng: {answer.correctAnswer}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+  // Check if all questions are answered
+  const isCompleted = Object.keys(answeredQuestions).length === questions.length && questions.length > 0;
 
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-primary to-green-500 transition-all duration-500"
-              style={{ width: `${stats.percentage}%` }}
-            />
-          </div>
-          <button
-            onClick={handleReset}
-            disabled={submitting}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all shadow-sm hover:shadow-md text-sm font-medium disabled:opacity-50"
-          >
-            <RotateCw className="w-4 h-4" />
-            Làm lại
-          </button>
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-2" />
+          <p className="text-gray-600 text-sm">Đang tải bài tập...</p>
         </div>
       </div>
+    );
+  }
+
+  // Show completion screen when all questions are answered (and not reviewing)
+  if (isCompleted && accuracy && !isReviewing) {
+    const score = {
+      correctCount: accuracy.correct_answers || 0,
+      total: accuracy.total_questions_available || questions.length,
+      percentage: Math.round(accuracy.accuracy_rate || 0),
+      totalXP: accuracy.total_xp_earned || 0,
+    };
+    
+    return (
+      <CompletionScreen
+        score={score}
+        onReset={handleResetExercise}
+        onReview={() => {
+          setIsReviewing(true);
+          setCurrentQuestion(0);
+        }}
+        onBack={() => window.history.back()}
+      />
     );
   }
 
@@ -260,17 +285,85 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
               Câu {currentQuestion + 1}/{questions.length}
             </span>
             <span className="text-sm font-medium text-primary">
-              {answeredQuestions.filter(aq => aq.isCorrect).length}/{answeredQuestions.length} đúng
+              {Object.keys(answeredQuestions).filter(id => answeredQuestions[id].isCorrect).length}/{Object.keys(answeredQuestions).length} đúng
             </span>
           </div>
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-300"
-              style={{ width: `${(answeredQuestions.length / questions.length) * 100}%` }}
+              style={{ width: `${(Object.keys(answeredQuestions).length / questions.length) * 100}%` }}
             />
           </div>
         </div>
       </div>
+
+      {/* Accuracy Stats Card - Luôn hiển thị */}
+      <div className="bg-gradient-to-r from-green-500 to-teal-600 rounded-xl shadow-lg p-6 text-white">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            <TrendingUp className="w-5 h-5" />
+            Thống kê bài tập
+          </h3>
+          {accuracy && (
+            <button
+              onClick={() => setShowResetConfirm(true)}
+              className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Làm lại từ đầu
+            </button>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="text-2xl font-bold">{accuracy ? accuracy.accuracy_rate.toFixed(1) : 0}%</div>
+            <div className="text-sm opacity-90">Độ chính xác</div>
+          </div>
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="text-2xl font-bold">{accuracy ? `${accuracy.correct_answers}/${accuracy.total_attempts}` : '0/0'}</div>
+            <div className="text-sm opacity-90">Câu đúng</div>
+          </div>
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="text-2xl font-bold">{accuracy ? accuracy.completion_rate.toFixed(0) : 0}%</div>
+            <div className="text-sm opacity-90">Hoàn thành</div>
+          </div>
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="text-2xl font-bold flex items-center gap-1">
+              <Award className="w-5 h-5" />
+              {accuracy ? accuracy.accuracy_grade : '-'}
+            </div>
+            <div className="text-sm opacity-90">Xếp loại</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Reset Confirmation Modal */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md mx-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Xác nhận làm lại</h3>
+            <p className="text-gray-600 mb-6">
+              Bạn có chắc muốn xóa toàn bộ kết quả và làm lại từ đầu? Hành động này không thể hoàn tác.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleResetExercise}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Question Card */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-5">
@@ -285,56 +378,15 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
         </div>
 
         {/* Options Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {question.options && question.options.map((option, index) => {
-            const isSelected = selectedAnswer === index;
-            const isCorrect = showResult && currentAnswer && option === currentAnswer.correctAnswer;
-            const showWrong = showResult && isSelected && !currentAnswer?.isCorrect;
-
-            return (
-              <button
-                key={index}
-                onClick={() => handleSelectAnswer(index)}
-                disabled={showResult}
-                className={`relative p-4 rounded-lg border-2 text-left transition-all duration-200 group ${
-                  isCorrect
-                    ? 'border-green-500 bg-green-50'
-                    : showWrong
-                    ? 'border-red-500 bg-red-50'
-                    : isSelected
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-gray-200 hover:border-gray-300 hover:shadow-sm bg-white'
-                } ${showResult ? 'cursor-default' : 'cursor-pointer hover:scale-[1.02]'}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                    isCorrect
-                      ? 'bg-green-500 border-green-500'
-                      : showWrong
-                      ? 'bg-red-500 border-red-500'
-                      : isSelected
-                      ? 'border-primary bg-primary'
-                      : 'border-gray-300 group-hover:border-gray-400'
-                  }`}>
-                    {isCorrect && <Check className="w-4 h-4 text-white" />}
-                    {showWrong && <X className="w-4 h-4 text-white" />}
-                    {!showResult && isSelected && (
-                      <div className="w-2 h-2 bg-white rounded-full" />
-                    )}
-                  </div>
-                  <span className={`text-sm font-medium ${
-                    isCorrect || showWrong ? 'text-gray-900' : 'text-gray-700'
-                  }`}>
-                    {option}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        <MultipleChoiceOptions
+          options={question.options}
+          currentAnswer={currentAnswer}
+          onSelect={handleSelectAnswer}
+          disabled={!!currentAnswer || submitting}
+        />
 
         {/* Explanation (if available after submit) */}
-        {showResult && currentAnswer && (
+        {currentAnswer && (
           <div className={`p-4 rounded-lg ${
             currentAnswer.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
           }`}>
@@ -348,7 +400,7 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
         )}
 
         {/* Action Buttons */}
-        <div className="flex justify-between pt-3">
+        <div className="flex gap-3 pt-6 border-t border-gray-200">
           {/* Previous Button */}
           <button
             onClick={() => {
@@ -363,35 +415,34 @@ const MultipleChoiceExercise = ({ questions, topicId, typeId }) => {
             Câu trước
           </button>
 
-          {/* Submit or Next Button */}
-          {!showResult ? (
+          {/* Show Summary Button when reviewing and completed */}
+          {isReviewing && isCompleted && (
             <button
-              onClick={handleSubmit}
-              disabled={selectedAnswer === null || currentAnswer}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md text-sm font-medium"
+              onClick={() => setIsReviewing(false)}
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-sm hover:shadow-md text-sm font-medium"
             >
-              {currentAnswer ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  Đã trả lời
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4" />
-                  Kiểm tra
-                </>
-              )}
-            </button>
-          ) : (
-            <button
-              onClick={handleNext}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all shadow-sm hover:shadow-md text-sm font-medium"
-            >
-              {currentQuestion < questions.length - 1 ? 'Tiếp theo' : 'Hoàn thành'}
-              <ChevronRight className="w-4 h-4" />
+              <Trophy className="w-4 h-4" />
+              Xem tổng kết
             </button>
           )}
+
+          {/* Next Button */}
+          <button
+            onClick={handleNext}
+            disabled={!currentAnswer || currentQuestion >= questions.length - 1}
+            className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md text-sm font-medium"
+          >
+            Tiếp theo
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
+        {/* Question Navigator */}
+      <QuestionNavigator
+        questions={questions}
+        currentIndex={currentQuestion}
+        answeredQuestions={answeredQuestions}
+        onNavigate={(index) => setCurrentQuestion(index)}
+      />
       </div>
     </div>
   );

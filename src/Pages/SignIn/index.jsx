@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { register } from "../../service/authService";
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -8,24 +9,151 @@ const Register = () => {
     email: '',
     username: '',
     password: '',
+    confirmPassword: '',
+    agreeTerms: false
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({
+    fullname: '',
+    email: '',
+    username: '',
+    password: '',
+    confirmPassword: '',
+    agreeTerms: ''
+  });
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: newValue
     }));
+    
+    // Validate field on change
+    validateField(name, newValue);
+  };
+
+  const validateField = (name, value) => {
+    let error = '';
+    
+    switch(name) {
+      case 'fullname':
+        if (!value.trim()) {
+          error = 'Họ và tên không được để trống';
+        } else if (value.trim().length < 2) {
+          error = 'Họ và tên phải có ít nhất 2 ký tự';
+        }
+        break;
+      
+      case 'email':
+        if (!value.trim()) {
+          error = 'Email không được để trống';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          error = 'Email không hợp lệ';
+        }
+        break;
+      
+      case 'username':
+        if (!value.trim()) {
+          error = 'Tên đăng nhập không được để trống';
+        } else if (value.length < 3) {
+          error = 'Tên đăng nhập phải có ít nhất 3 ký tự';
+        } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+          error = 'Tên đăng nhập chỉ chứa chữ cái, số và dấu gạch dưới';
+        }
+        break;
+      
+      case 'password':
+        if (!value) {
+          error = 'Mật khẩu không được để trống';
+        } else if (value.length < 8) {
+          error = 'Mật khẩu phải có ít nhất 8 ký tự';
+        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
+          error = 'Mật khẩu phải có chữ hoa, chữ thường và số';
+        }
+        // Also validate confirmPassword if it exists
+        if (formData.confirmPassword) {
+          validateField('confirmPassword', formData.confirmPassword);
+        }
+        break;
+      
+      case 'confirmPassword':
+        if (!value) {
+          error = 'Vui lòng xác nhận mật khẩu';
+        } else if (value !== formData.password) {
+          error = 'Mật khẩu xác nhận không khớp';
+        }
+        break;
+      
+      case 'agreeTerms':
+        if (!value) {
+          error = 'Vui lòng đồng ý với điều khoản sử dụng';
+        }
+        break;
+    }
+    
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+  };
+
+  const validateStep = (step) => {
+    let isValid = true;
+    const newErrors = { ...errors };
+    
+    if (step === 1) {
+      // Validate step 1 fields
+      ['fullname', 'email', 'username'].forEach(field => {
+        validateField(field, formData[field]);
+        if (!formData[field].trim()) {
+          isValid = false;
+        }
+      });
+      
+      if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        isValid = false;
+      }
+      if (!formData.username.trim() || formData.username.length < 3) {
+        isValid = false;
+      }
+      if (!formData.fullname.trim() || formData.fullname.trim().length < 2) {
+        isValid = false;
+      }
+    } else if (step === 2) {
+      // Validate step 2 fields
+      ['password', 'confirmPassword', 'agreeTerms'].forEach(field => {
+        validateField(field, formData[field]);
+      });
+      
+      if (!formData.password || formData.password.length < 8) {
+        isValid = false;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        isValid = false;
+      }
+      if (!formData.agreeTerms) {
+        isValid = false;
+      }
+    }
+    
+    return isValid;
   };
 
   const handleNextStep = (e) => {
     e.preventDefault();
+    
     if (currentStep < 2) {
-      setCurrentStep(currentStep + 1);
+      // Validate step 1 before proceeding
+      if (validateStep(1)) {
+        setCurrentStep(currentStep + 1);
+      }
     } else {
       handleSubmit(e);
     }
@@ -33,41 +161,59 @@ const Register = () => {
 
  const handleSubmit = async (e) => {
   e.preventDefault();
+  setError('');
+  
+  // Validate step 2
+  if (!validateStep(2)) {
+    return;
+  }
+
   setIsLoading(true);
 
   try {
-    const user = await register(formData); 
-    console.log("Đăng ký thành công:", user);
-    if (user.accessToken) {
-      localStorage.setItem("accessToken", user.accessToken);
-      localStorage.setItem("refreshToken", user.refreshToken);
-      localStorage.setItem("userId", user.user?.id);
-      localStorage.setItem("userEmail", user.user?.email);
-      localStorage.setItem("userRole", user.user?.role);
-    }
-
-    navigate("/login");
+    console.log('📤 Sending registration data:', {
+      fullname: formData.fullname,
+      username: formData.username,
+      email: formData.email,
+      password: '***'
+    });
+    
+    const response = await register({
+      fullname: formData.fullname,
+      username: formData.username,
+      email: formData.email,
+      password: formData.password
+    }); 
+    
+    console.log('✅ Đăng ký thành công:', response);
+    toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
+    
+    // Chuyển sang trang login
+    setTimeout(() => {
+      navigate("/login");
+    }, 1500);
+    
   } catch (err) {
-    console.error(err);
-    setError(err.message || "Đăng ký thất bại");
+    console.error('❌ Đăng ký thất bại:', err);
+    
+    const errorMessage = err.message || err.error || 'Đăng ký thất bại. Vui lòng thử lại!';
+    setError(errorMessage);
+    toast.error(errorMessage);
   } finally {
     setIsLoading(false);
   }
 };
 
   const handleGoogleRegister = () => {
-    // Implement Google OAuth registration
     console.log('Google register clicked');
   };
 
   const handleFacebookRegister = () => {
-    // Implement Facebook OAuth registration
     console.log('Facebook register clicked');
   };
 
   const renderStep1 = () => (
     <div className="space-y-6">
-      {/* Full Name */}
       <div>
         <label htmlFor="fullname" className="block text-sm font-medium text-gray-700 mb-2">
           Họ và tên
@@ -79,12 +225,15 @@ const Register = () => {
           value={formData.fullname}
           onChange={handleInputChange}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+          className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 ${
+            errors.fullname ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+          }`}
           placeholder="Nhập họ và tên của bạn"
         />
+        {errors.fullname && (
+          <p className="mt-1 text-sm text-red-600">{errors.fullname}</p>
+        )}
       </div>
-
-      {/* Email */}
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
           Email
@@ -96,12 +245,15 @@ const Register = () => {
           value={formData.email}
           onChange={handleInputChange}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+          className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 ${
+            errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+          }`}
           placeholder="Nhập email của bạn"
         />
+        {errors.email && (
+          <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+        )}
       </div>
-
-      {/* Username */}
       <div>
         <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
           Tên đăng nhập
@@ -113,16 +265,20 @@ const Register = () => {
           value={formData.username}
           onChange={handleInputChange}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+          className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 ${
+            errors.username ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+          }`}
           placeholder="Chọn tên đăng nhập"
         />
+        {errors.username && (
+          <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+        )}
       </div>
     </div>
   );
 
   const renderStep2 = () => (
     <div className="space-y-6">
-      {/* Password */}
       <div>
         <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
           Mật khẩu
@@ -135,7 +291,9 @@ const Register = () => {
             value={formData.password}
             onChange={handleInputChange}
             required
-            className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+            className={`w-full px-4 py-3 pr-12 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 ${
+              errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+            }`}
             placeholder="Tạo mật khẩu mạnh"
           />
           <button
@@ -155,12 +313,14 @@ const Register = () => {
             )}
           </button>
         </div>
-        <div className="mt-2 text-xs text-gray-500">
-          Mật khẩu nên có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số
-        </div>
+        {errors.password ? (
+          <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+        ) : (
+          <div className="mt-2 text-xs text-gray-500">
+            Mật khẩu nên có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số
+          </div>
+        )}
       </div>
-
-      {/* Confirm Password */}
       <div>
         <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
           Xác nhận mật khẩu
@@ -173,7 +333,9 @@ const Register = () => {
             value={formData.confirmPassword}
             onChange={handleInputChange}
             required
-            className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+            className={`w-full px-4 py-3 pr-12 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 ${
+              errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+            }`}
             placeholder="Nhập lại mật khẩu"
           />
           <button
@@ -193,33 +355,41 @@ const Register = () => {
             )}
           </button>
         </div>
+        {errors.confirmPassword && (
+          <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+        )}
       </div>
-
-      {/* Terms Agreement */}
       <div className="flex items-start">
-        <div className="flex items-center h-5">
-          <input
-            type="checkbox"
-            id="agreeTerms"
-            name="agreeTerms"
-            checked={formData.agreeTerms}
-            onChange={handleInputChange}
-            required
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
+        <div className="flex items-start">
+          <div className="flex items-center h-5">
+            <input
+              type="checkbox"
+              id="agreeTerms"
+              name="agreeTerms"
+              checked={formData.agreeTerms}
+              onChange={handleInputChange}
+              required
+              className={`h-4 w-4 text-blue-600 focus:ring-blue-500 rounded ${
+                errors.agreeTerms ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+          </div>
+          <div className="ml-3 text-sm">
+            <label htmlFor="agreeTerms" className="text-gray-700">
+              Tôi đồng ý với{' '}
+              <Link to="/terms" className="text-blue-600 hover:text-blue-800">
+                Điều khoản sử dụng
+              </Link>{' '}
+              và{' '}
+              <Link to="/privacy" className="text-blue-600 hover:text-blue-800">
+                Chính sách bảo mật
+              </Link>
+            </label>
+          </div>
         </div>
-        <div className="ml-3 text-sm">
-          <label htmlFor="agreeTerms" className="text-gray-700">
-            Tôi đồng ý với{' '}
-            <Link to="/terms" className="text-blue-600 hover:text-blue-800">
-              Điều khoản sử dụng
-            </Link>{' '}
-            và{' '}
-            <Link to="/privacy" className="text-blue-600 hover:text-blue-800">
-              Chính sách bảo mật
-            </Link>
-          </label>
-        </div>
+        {errors.agreeTerms && (
+          <p className="mt-1 text-sm text-red-600">{errors.agreeTerms}</p>
+        )}
       </div>
     </div>
   );
@@ -227,7 +397,6 @@ const Register = () => {
   return (
     <div className="min-h-full bg-gradient-to-br from-primary-50 via-green-50 to-white-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        {/* Register Card */}
         <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
           {/* Header */}
           <div className="text-center mb-8">

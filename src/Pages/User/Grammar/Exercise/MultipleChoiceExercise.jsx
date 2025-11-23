@@ -10,11 +10,13 @@ import ExerciseHeader from './components/ExerciseHeader';
 import { getExerciseQuestions, submitExerciseAnswer, getExerciseHistory, getExerciseTypes, resetExerciseAnswers, getExerciseAccuracy } from '../../../../service/grammarService';
 
 const MultipleChoiceExercisePage = () => {
+  // Lấy các tham số từ URL
   const { topicId } = useParams();
   const [searchParams] = useSearchParams();
   const lessonId = searchParams.get('lesson_id');
   const navigate = useNavigate();
   
+  // State quản lý dữ liệu và trạng thái
   const [exercises, setExercises] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({});
@@ -24,21 +26,25 @@ const MultipleChoiceExercisePage = () => {
   const [typeId, setTypeId] = useState(null);
   const [accuracy, setAccuracy] = useState(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
 
-  // Normalize helpers to ensure consistent types/format
+  // Hàm chuẩn hóa đáp án
   const normalizeAnswer = (a) => {
     if (a === undefined || a === null) return '';
     return String(a).trim();
   };
 
+  // Hàm chuẩn hóa lựa chọn
   const normalizeOption = (opt) => {
     if (typeof opt === 'string') return opt.trim();
     if (!opt) return '';
-    // try common object shapes
+    // thử các thuộc tính phổ biến
     return (opt.label || opt.value || opt.text || String(opt)).toString().trim();
   };
 
+  // Tải dữ liệu bài tập khi component mount hoặc khi topicId/lessonId thay đổi
   useEffect(() => {
+    // Hàm tải bài tập từ API
     const loadExercises = async () => {
       if (!lessonId) {
         toast.error('Lesson ID is required');
@@ -49,18 +55,17 @@ const MultipleChoiceExercisePage = () => {
       try {
         setLoading(true);
         
-        // Fetch exercise types first to get the correct type_id
+        // Lấy danh sách loại bài tập để lấy type_id phù hợp
         const types = await getExerciseTypes(topicId, lessonId);
-        console.log('Available exercise types:', types);
         
-        // Find Multiple Choice type from API response
+        // Tìm loại bài tập trắc nghiệm
         const multipleChoiceType = types.find(t => 
           t.name.toLowerCase() === 'multiple choice' || 
           t.name.toLowerCase().includes('trắc nghiệm')
         );
         
         if (!multipleChoiceType) {
-          console.error('Multiple Choice type not found for this lesson');
+          // Không tìm thấy loại bài tập trắc nghiệm
           toast.error('Không tìm thấy bài tập trắc nghiệm cho bài học này');
           setExercises([]);
           setLoading(false);
@@ -70,31 +75,25 @@ const MultipleChoiceExercisePage = () => {
         const multipleChoiceTypeId = multipleChoiceType.id;
         setTypeId(multipleChoiceTypeId);
         
-        console.log('Loading exercises with params:', { topicId, lessonId, typeId: multipleChoiceTypeId });
-        
-        // Fetch questions
+        // Lấy danh sách câu hỏi trắc nghiệm
         const data = await getExerciseQuestions(topicId, lessonId, multipleChoiceTypeId);
         
-        console.log('API Response data:', data);
-        
         if (data.questions && data.questions.length > 0) {
-          console.log('Found questions:', data.questions.length);
-          // Map API response to component format
+          // Chuyển đổi dữ liệu câu hỏi về định dạng component sử dụng
           const mappedExercises = data.questions.map(q => {
-            // Parse options if it's a string
+            // Xử lý options nếu là chuỗi
             let options = [];
             if (typeof q.options === 'string') {
               try {
                 options = JSON.parse(q.options);
               } catch (e) {
-                console.error('Error parsing options:', e);
                 options = [];
               }
             } else if (Array.isArray(q.options)) {
               options = q.options;
             }
             
-            // normalize options and correct_answer
+            // Chuẩn hóa options và đáp án đúng
             const normalizedOptions = options.map(normalizeOption);
             const normalizedCorrect = normalizeAnswer(q.correct_answer);
             
@@ -110,10 +109,9 @@ const MultipleChoiceExercisePage = () => {
             };
           });
           
-          console.log('Mapped exercises:', mappedExercises);
           setExercises(mappedExercises);
           
-          // Load user's previous answers if available
+          // Nếu người dùng đã làm bài, lấy lịch sử đáp án
           const user = JSON.parse(localStorage.getItem('user') || '{}');
           if (user.id) {
             try {
@@ -124,7 +122,7 @@ const MultipleChoiceExercisePage = () => {
                 
                 history.answers.forEach(answer => {
                   previousAnswers[answer.question_id] = normalizeAnswer(answer.user_answer);
-                  // Normalize is_correct to boolean (API may return 0/1/"1"/true)
+                  // Chuẩn hóa kết quả đúng/sai
                   const isCorrect = !!(answer.is_correct === true || answer.is_correct === 1 || answer.is_correct === '1' || String(answer.is_correct) === 'true');
                   previousFeedback[answer.question_id] = {
                     isCorrect,
@@ -136,19 +134,17 @@ const MultipleChoiceExercisePage = () => {
                 setShowFeedback(previousFeedback);
               }
             } catch (historyError) {
-              console.log('No previous history found');
+              // Không có lịch sử
             }
           }
           
-          // Load accuracy data
+          // Lấy thống kê độ chính xác
           await loadAccuracyData(user.id, lessonId, multipleChoiceTypeId);
         } else {
-          console.log('No questions found in response');
           setExercises([]);
         }
       } catch (error) {
-        console.error('Error loading exercises:', error);
-        console.error('Error details:', error.response?.data || error.message);
+        // Xử lý lỗi khi tải bài tập
         toast.error('Không thể tải bài tập');
         setExercises([]);
       } finally {
@@ -159,15 +155,17 @@ const MultipleChoiceExercisePage = () => {
     loadExercises();
   }, [topicId, lessonId]);
 
+  // Hàm lấy thống kê độ chính xác
   const loadAccuracyData = async (userId, lessonId, typeId) => {
     try {
       const accuracyData = await getExerciseAccuracy(userId, lessonId, typeId);
       setAccuracy(accuracyData);
     } catch (error) {
-      console.log('Could not load accuracy data');
+      // Không lấy được thống kê
     }
   };
 
+  // Hàm xử lý reset bài tập
   const handleResetExercise = async () => {
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -178,41 +176,37 @@ const MultipleChoiceExercisePage = () => {
 
       await resetExerciseAnswers(user.id, lessonId, typeId);
       
-      // Reset local state
+      // Reset lại state
       setUserAnswers({});
       setShowFeedback({});
       setCurrentQuestionIndex(0);
       setIsCompleted(false);
       setShowResetConfirm(false);
       
-      // Reload accuracy data
+      // Tải lại thống kê
       await loadAccuracyData(user.id, lessonId, typeId);
       
       toast.success('Đã reset bài tập thành công!');
     } catch (error) {
-      console.error('Error resetting exercise:', error);
       toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi reset bài tập');
     }
   };
 
+  // Lấy câu hỏi hiện tại
   const currentQuestion = exercises[currentQuestionIndex];
 
-  const handleAnswerSelect = (answer) => {
+  // Xử lý khi chọn đáp án
+  const handleAnswerSelect = async (answer) => {
     if (showFeedback[currentQuestion.id]) return;
+    
+    const normalizedAnswer = normalizeAnswer(answer);
     
     setUserAnswers({
       ...userAnswers,
-      [currentQuestion.id]: normalizeAnswer(answer),
+      [currentQuestion.id]: normalizedAnswer,
     });
-  };
 
-  const handleCheckAnswer = async () => {
-    const userAnswer = normalizeAnswer(userAnswers[currentQuestion.id]);
-    if (!userAnswer) {
-      toast.warning('Vui lòng chọn câu trả lời');
-      return;
-    }
-
+    // Gửi đáp án lên API ngay khi chọn
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       if (!user.id) {
@@ -220,16 +214,27 @@ const MultipleChoiceExercisePage = () => {
         return;
       }
 
-      // Submit answer to API
+      // Gửi đáp án lên server
       const result = await submitExerciseAnswer(
         user.id,
         currentQuestion.id,
         typeId,
-        userAnswer
+        normalizedAnswer
       );
 
-      // Normalize is_correct from API into boolean
+      // Chuẩn hóa kết quả đúng/sai
       const isCorrect = !!(result.is_correct === true || result.is_correct === 1 || result.is_correct === '1' || String(result.is_correct) === 'true');
+      
+      // Cập nhật đáp án đúng nếu có từ server
+      if (result.correct_answer) {
+        setExercises(prevExercises => 
+          prevExercises.map(ex => 
+            ex.id === currentQuestion.id 
+              ? { ...ex, correct_answer: normalizeAnswer(result.correct_answer) }
+              : ex
+          )
+        );
+      }
       
       setShowFeedback({
         ...showFeedback,
@@ -245,16 +250,76 @@ const MultipleChoiceExercisePage = () => {
         toast.error(result.message || 'Chưa đúng, hãy xem giải thích bên dưới');
       }
       
-      // Reload accuracy data after submitting
+      // Tải lại thống kê sau khi trả lời
       if (user.id) {
         await loadAccuracyData(user.id, lessonId, typeId);
       }
     } catch (error) {
-      console.error('Error submitting answer:', error);
       toast.error('Có lỗi xảy ra khi kiểm tra câu trả lời');
     }
   };
 
+  // Xử lý khi nhấn nút kiểm tra đáp án (nếu có)
+  const handleCheckAnswer = async () => {
+    const userAnswer = normalizeAnswer(userAnswers[currentQuestion.id]);
+    if (!userAnswer) {
+      toast.warning('Vui lòng chọn câu trả lời');
+      return;
+    }
+
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!user.id) {
+        toast.error('Vui lòng đăng nhập để làm bài tập');
+        return;
+      }
+
+      // Gửi đáp án lên server
+      const result = await submitExerciseAnswer(
+        user.id,
+        currentQuestion.id,
+        typeId,
+        userAnswer
+      );
+
+      // Chuẩn hóa kết quả đúng/sai
+      const isCorrect = !!(result.is_correct === true || result.is_correct === 1 || result.is_correct === '1' || String(result.is_correct) === 'true');
+      
+      // Cập nhật đáp án đúng nếu có từ server
+      if (result.correct_answer) {
+        setExercises(prevExercises => 
+          prevExercises.map(ex => 
+            ex.id === currentQuestion.id 
+              ? { ...ex, correct_answer: normalizeAnswer(result.correct_answer) }
+              : ex
+          )
+        );
+      }
+      
+      setShowFeedback({
+        ...showFeedback,
+        [currentQuestion.id]: {
+          isCorrect,
+          show: true,
+        },
+      });
+
+      if (isCorrect) {
+        toast.success(`${result.message || 'Chính xác!'} +${result.xp_earned || currentQuestion.xp_reward} XP`);
+      } else {
+        toast.error(result.message || 'Chưa đúng, hãy xem giải thích bên dưới');
+      }
+      
+      // Tải lại thống kê sau khi trả lời
+      if (user.id) {
+        await loadAccuracyData(user.id, lessonId, typeId);
+      }
+    } catch (error) {
+      toast.error('Có lỗi xảy ra khi kiểm tra câu trả lời');
+    }
+  };
+
+  // Chuyển sang câu hỏi tiếp theo
   const handleNextQuestion = () => {
     if (currentQuestionIndex < exercises.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -263,12 +328,14 @@ const MultipleChoiceExercisePage = () => {
     }
   };
 
+  // Quay lại câu hỏi trước
   const handlePrevQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   };
 
+  // Reset lại trạng thái làm bài (chỉ local, không gọi API)
   const handleReset = () => {
     setUserAnswers({});
     setShowFeedback({});
@@ -276,6 +343,7 @@ const MultipleChoiceExercisePage = () => {
     setIsCompleted(false);
   };
 
+  // Tính điểm số và tổng kết
   const calculateScore = () => {
     const correctCount = Object.keys(showFeedback).filter(
       (key) => showFeedback[key].isCorrect
@@ -295,9 +363,11 @@ const MultipleChoiceExercisePage = () => {
     };
   };
 
+  // Tính tiến độ làm bài
   const progress = ((currentQuestionIndex + 1) / exercises.length) * 100;
   const answeredCount = Object.keys(showFeedback).length;
 
+  // Hiển thị loading khi đang tải dữ liệu
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -309,6 +379,7 @@ const MultipleChoiceExercisePage = () => {
     );
   }
 
+  // Hiển thị khi không có bài tập
   if (exercises.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -327,17 +398,24 @@ const MultipleChoiceExercisePage = () => {
     );
   }
 
-  if (isCompleted) {
+  // Hiển thị màn hình hoàn thành (không review)
+  if (isCompleted && !isReviewing) {
     const score = calculateScore();
     return (
       <CompletionScreen
         score={score}
         onReset={handleReset}
+        onReview={() => {
+          setIsReviewing(true);
+          setIsCompleted(false);
+          setCurrentQuestionIndex(0);
+        }}
         onBack={() => navigate(`/grammar/${topicId}`)}
       />
     );
   }
 
+  // Giao diện chính của trang làm bài tập
   return (
     <div className="min-h-screen bg-gray-50">
       <ExerciseHeader
@@ -349,7 +427,7 @@ const MultipleChoiceExercisePage = () => {
       />
 
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        {/* Accuracy Stats Card */}
+        {/* Thẻ thống kê độ chính xác */}
         {accuracy && (
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg p-6 mb-6 text-white">
             <div className="flex items-center justify-between mb-4">
@@ -390,7 +468,7 @@ const MultipleChoiceExercisePage = () => {
           </div>
         )}
 
-        {/* Reset Confirmation Modal */}
+        {/* Modal xác nhận reset bài tập */}
         {showResetConfirm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full">
@@ -419,7 +497,7 @@ const MultipleChoiceExercisePage = () => {
         )}
 
         <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
-          {/* Question Type Badge */}
+          {/* Badge loại câu hỏi */}
           <div className="flex items-center justify-between mb-6">
             <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
               Trắc nghiệm
@@ -430,7 +508,7 @@ const MultipleChoiceExercisePage = () => {
             </span>
           </div>
 
-          {/* Question */}
+          {/* Hiển thị câu hỏi */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
               {currentQuestion.question}
@@ -453,7 +531,7 @@ const MultipleChoiceExercisePage = () => {
             correctAnswer={currentQuestion.correct_answer}
           />
 
-          {/* Action Buttons */}
+          {/* Các nút điều hướng câu hỏi */}
           <div className="flex gap-3 pt-6 border-t border-gray-200">
             <button
               onClick={handlePrevQuestion}
@@ -464,15 +542,21 @@ const MultipleChoiceExercisePage = () => {
               Câu trước
             </button>
 
-            {!showFeedback[currentQuestion.id] ? (
+            {/* Show Summary Button when reviewing */}
+            {isReviewing && Object.keys(showFeedback).length === exercises.length && (
               <button
-                onClick={handleCheckAnswer}
-                disabled={!userAnswers[currentQuestion.id]}
-                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => {
+                  setIsReviewing(false);
+                  setIsCompleted(true);
+                }}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center gap-2"
               >
-                Kiểm tra
+                <Award className="w-5 h-5" />
+                Xem tổng kết
               </button>
-            ) : (
+            )}
+
+            {showFeedback[currentQuestion.id] && (
               <button
                 onClick={handleNextQuestion}
                 className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
@@ -484,6 +568,7 @@ const MultipleChoiceExercisePage = () => {
           </div>
         </div>
 
+        {/* Thanh điều hướng nhanh các câu hỏi */}
         <QuestionNavigator
           exercises={exercises}
           currentIndex={currentQuestionIndex}

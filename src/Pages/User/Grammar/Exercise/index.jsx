@@ -47,7 +47,7 @@ const ExercisePage = () => {
         
         const response = await getExerciseQuestions(topicId, lessonId, typeId);
         
-        if (response.code === 1000 && response.result) {
+        if ((response.code === 1000 || response.code === 200) && response.result) {
           const { questions } = response.result;
           
           // Transform API data to match component format
@@ -131,7 +131,7 @@ const ExercisePage = () => {
         currentQuestion.type_id
       );
 
-      if (response.code === 1000 && response.result) {
+      if ((response.code === 1000 || response.code === 200) && response.result) {
         const { is_correct, correct_answer, explanation } = response.result;
         
         setShowFeedback({

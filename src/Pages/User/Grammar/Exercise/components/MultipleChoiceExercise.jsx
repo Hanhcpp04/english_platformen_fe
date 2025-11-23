@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle, XCircle } from 'lucide-react';
 
+// Component hiển thị các lựa chọn trắc nghiệm
 const MultipleChoiceExercise = ({ 
   question, 
   options, 
@@ -10,12 +11,36 @@ const MultipleChoiceExercise = ({
   onSelect, 
   disabled 
 }) => {
+  // Hàm chuẩn hóa giá trị để so sánh
+  const normalize = (value) => {
+    if (value === undefined || value === null) return '';
+    return String(value).trim().toLowerCase();
+  };
+
   return (
     <div className="space-y-3">
+      {/* Lặp qua từng lựa chọn */}
       {options.map((option, index) => {
-        const isSelected = userAnswer === option;
-        const isCorrect = option === correctAnswer;
+        const normalizedOption = normalize(option);
+        const normalizedUserAnswer = normalize(userAnswer);
+        const normalizedCorrectAnswer = normalize(correctAnswer);
         
+        // Kiểm tra lựa chọn này có được chọn không
+        const isSelected = normalizedUserAnswer === normalizedOption;
+        
+        // Xác định lựa chọn này có đúng không
+        let isCorrect;
+        if (normalizedCorrectAnswer) {
+          // So sánh với đáp án đúng nếu có
+          isCorrect = normalizedOption === normalizedCorrectAnswer;
+        } else if (feedback && feedback.isCorrect) {
+          // Nếu backend trả về đúng và lựa chọn này được chọn
+          isCorrect = isSelected;
+        } else {
+          isCorrect = false;
+        }
+        
+        // Xác định class cho button theo trạng thái
         let buttonClass = 'border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50';
         
         if (isSelected && !feedback) {
@@ -39,6 +64,7 @@ const MultipleChoiceExercise = ({
           >
             <div className="flex items-center justify-between">
               <span className="font-medium text-gray-900">{option}</span>
+              {/* Hiển thị icon đúng/sai nếu đã có feedback */}
               {feedback && isCorrect && (
                 <CheckCircle className="w-5 h-5 text-green-600" />
               )}

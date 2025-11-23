@@ -65,7 +65,7 @@ const ExerciseSection = ({ topicId }) => {
 
         const response = await getExerciseTypesByTopic(topicId, userId);
 
-        if (response.code === 1000 && response.result) {
+        if ((response.code === 1000 || response.code === 200) && response.result) {
           const types = response.result.map((type) => ({
             id: type.id,
             name: type.name,
@@ -96,7 +96,6 @@ const ExerciseSection = ({ topicId }) => {
     }
   }, [topicId]);
 
-  // 🩷 Step 2: Fetch questions when exercise type is selected
   const handleSelectType = async (type) => {
     if (selectedType?.id === type.id) return; // Prevent re-fetch if same type
 
@@ -126,7 +125,7 @@ const ExerciseSection = ({ topicId }) => {
 
       const response = await getExerciseQuestions(type.id, topicId, userId);
 
-      if (response.code === 1000 && response.result) {
+      if ((response.code === 1000 || response.code === 200) && response.result) {
         setQuestions(response.result.questions || []);
       } else {
         throw new Error(response.message || 'Không thể tải câu hỏi');
@@ -230,6 +229,7 @@ const ExerciseSection = ({ topicId }) => {
             <>
               {selectedType.id === 1 && (
                 <MultipleChoiceExercise 
+                  key={`${topicId}-${selectedType.id}`}
                   questions={questions} 
                   topicId={topicId}
                   typeId={selectedType.id}
@@ -237,6 +237,7 @@ const ExerciseSection = ({ topicId }) => {
               )}
               {selectedType.id === 2 && (
                 <WordArrangementExercise 
+                  key={`${topicId}-${selectedType.id}`}
                   questions={questions}
                   topicId={topicId}
                   typeId={selectedType.id}
