@@ -20,9 +20,8 @@ import Writing from "./User/Writing"
 
 // Forum Pages
 import ForumHome from "./User/Forum/ForumHome"
-import PostDetailPage from "./User/Forum/PostDetailPage"
+import PostList from "./User/Forum/PostList"
 import CreatePostPage from "./User/Forum/CreatePostPage"
-import EditPostPage from "./User/Forum/EditPostPage"
 import MyPostsPage from "./User/Forum/MyPostsPage"
 
 // Admin Pages
@@ -30,6 +29,9 @@ import AdminDashboard from "./Admin/Dashboard"
 import UserManagement from "./Admin/UserManagement"
 import TopicVocabManagement from "./Admin/TopicVocabManagement"
 import VocabManagement from "./Admin/VocabManagement"
+import GrammarManagement from "./Admin/GrammarManagement"
+import WritingManagement from "./Admin/WritingManagement"
+import ForumManagement from "./Admin/ForumManagement"
 
 const PublicPage = [
     { path: "/", component: ProtectedLandingPage, layout: UserLayout },
@@ -52,16 +54,17 @@ const PublicPage = [
     
     // Forum Routes
     { path: "/forum", component: ForumHome, layout: UserLayout },
-    { path: "/forum/create", component: CreatePostPage, layout: UserLayout },
-    { path: "/forum/edit/:postId", component: EditPostPage, layout: UserLayout },
-    { path: "/forum/me", component: MyPostsPage, layout: UserLayout },
-    { path: "/forum/:id", component: PostDetailPage, layout: UserLayout },
+    { path: "/forum/posts", component: PostList, layout: UserLayout },
+    { path: "/forum/my-posts", component: MyPostsPage, layout: UserLayout },
     
     // Admin Routes
     { path: "/admin/dashboard", component: AdminDashboard, layout: AdminLayout },
     { path: "/admin/users", component: UserManagement, layout: AdminLayout },
     { path: "/admin/topics", component: TopicVocabManagement, layout: AdminLayout },
-    { path: "/admin/vocabulary", component: VocabManagement, layout: AdminLayout }
+    { path: "/admin/vocabulary", component: VocabManagement, layout: AdminLayout },
+    { path: "/admin/grammar", component: GrammarManagement, layout: AdminLayout },
+    { path: "/admin/writing", component: WritingManagement, layout: AdminLayout },
+    { path: "/admin/forum", component: ForumManagement, layout: AdminLayout }
 ];
 
 const PrivatePage = [

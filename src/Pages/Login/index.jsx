@@ -91,15 +91,31 @@ const Login = () => {
 
   try {
     console.log("🔐 Starting login...");
-    const user = await login({ email, password });
-    console.log("✅ Login successful, user data:", user);
-    const name = user?.fullName || user?.fullname || user?.username || user?.name || user?.email || 'Người dùng';
+    await login({ email, password });
+    console.log("✅ Login successful");
+    
+    // Lấy thông tin user từ localStorage sau khi login
+    const userStr = localStorage.getItem('user');
+    const userData = userStr ? JSON.parse(userStr) : null;
+    console.log("👤 User data:", userData);
+    
+    const name = userData?.fullName || userData?.fullname || userData?.username || userData?.name || userData?.email || 'Người dùng';
     toast.success(`Đăng nhập thành công, ${name}!`);
+    
     // Đợi để đảm bảo tất cả events được xử lý
     await new Promise(resolve => setTimeout(resolve, 200));
     
-    console.log("🔄 Navigating to dashboard...");
-    navigate("/dashboard");
+    // Điều hướng dựa trên role
+    const userRole = userData?.role;
+    console.log("🔄 User role:", userRole);
+    
+    if (userRole === 'ADMIN') {
+      console.log("🔄 Navigating to admin dashboard...");
+      navigate("/admin/dashboard");
+    } else {
+      console.log("🔄 Navigating to user dashboard...");
+      navigate("/dashboard");
+    }
   } catch (err) {
     console.error("❌ Login failed:", err);
     const msg = err?.response?.data?.message || 'Đăng nhập thất bại';

@@ -11,7 +11,9 @@ import {
   Settings,
   ChevronLeft,
   GraduationCap,
-  Layers
+  Layers,
+  MessageSquare,
+  PenTool
 } from 'lucide-react';
 
 const AdminSidebar = ({ isOpen, setIsOpen }) => {
@@ -25,46 +27,37 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
       path: '/admin/dashboard',
     },
     {
-      title: 'User Management',
+      title: 'Quản lý User',
       icon: Users,
       path: '/admin/users',
     },
     {
-      title: 'Topic Management',
+      title: 'Quản lý Chủ đề',
       icon: Layers,
       path: '/admin/topics',
     },
     {
-      title: 'Vocabulary',
+      title: 'Quản lý Từ vựng',
       icon: BookOpen,
       path: '/admin/vocabulary',
     },
     {
-      title: 'Grammar Lessons',
+      title: 'Quản lý Ngữ pháp',
       icon: GraduationCap,
       path: '/admin/grammar',
     },
     {
-      title: 'Exercise Management',
-      icon: ClipboardList,
-      path: '/admin/exercises',
-      subItems: [
-        { title: 'Vocabulary Exercises', path: '/admin/exercises/vocabulary' },
-        { title: 'Grammar Exercises', path: '/admin/exercises/grammar' },
-      ]
-    },
-    {
-      title: 'Writing Categories',
-      icon: FileText,
+      title: 'Quản lý Viết',
+      icon: PenTool,
       path: '/admin/writing',
     },
     {
-      title: 'Badges',
-      icon: Award,
-      path: '/admin/badges',
+      title: 'Quản lý Forum',
+      icon: MessageSquare,
+      path: '/admin/forum',
     },
     {
-      title: 'Settings',
+      title: 'Cài đặt',
       icon: Settings,
       path: '/admin/settings',
     },

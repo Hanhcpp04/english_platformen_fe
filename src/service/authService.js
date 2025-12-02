@@ -34,8 +34,8 @@ export const login = async ({ email, password }) => {
       window.dispatchEvent(new Event('userLoggedIn'));
       window.dispatchEvent(new Event('storage'));
       
-      // Trả về true để báo login thành công
-      return true;
+      // Trả về result để có thể lấy thông tin user và role
+      return result;
     } else {
       throw new Error('Invalid login response: missing tokens');
     }

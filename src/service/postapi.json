@@ -1,0 +1,246 @@
+{
+  "service": "Forum API",
+  "basePath": "/forum",
+  "authentication": {
+    "mechanism": "Spring Security context (user id stored as Authentication#getName)",
+    "notes": "Endpoints marked authRequired=true return code 9999 with message 'Unauthorized' when no authenticated user is present."
+  },
+  "responseWrapper": {
+    "type": "APIResponse<T>",
+    "fields": {
+      "code": "int (1000=success, 404=not found, 9999=error)",
+      "message": "string",
+      "result": "endpoint-specific payload"
+    }
+  },
+  "sharedModels": {
+    "PostResponse": {
+      "id": "long",
+      "userId": "long",
+      "username": "string",
+      "userAvatar": "string",
+      "title": "string",
+      "content": "string",
+      "tags": "string[]",
+      "likesCount": "int",
+      "commentsCount": "int",
+      "viewsCount": "int",
+      "isLiked": "boolean",
+      "media": "MediaResponse[]",
+      "createdAt": "ISO datetime",
+      "updatedAt": "ISO datetime"
+    },
+    "MediaResponse": {
+      "id": "long",
+      "mediaType": "string",
+      "fileName": "string",
+      "mimeType": "string",
+      "fileSize": "int (bytes)",
+      "url": "string",
+      "thumbnailUrl": "string",
+      "createdAt": "ISO datetime"
+    },
+    "PostListResponse": {
+      "posts": "PostResponse[]",
+      "currentPage": "int",
+      "totalPages": "int",
+      "totalElements": "long",
+      "pageSize": "int"
+    },
+    "CommentResponse": {
+      "id": "long",
+      "postId": "long",
+      "userId": "long",
+      "username": "string",
+      "userAvatar": "string",
+      "parentId": "long | null",
+      "content": "string",
+      "likesCount": "int",
+      "isLiked": "boolean",
+      "createdAt": "ISO datetime",
+      "updatedAt": "ISO datetime",
+      "replies": "CommentResponse[] (recursive tree)"
+    },
+    "CommentListResponse": {
+      "comments": "CommentResponse[]",
+      "currentPage": "int",
+      "totalPages": "int",
+      "totalElements": "long",
+      "pageSize": "int"
+    }
+  },
+  "endpoints": [
+    {
+      "name": "List posts",
+      "method": "GET",
+      "path": "/posts",
+      "authRequired": false,
+      "queryParams": [
+        {"name": "page", "type": "int", "default": 1, "description": "1-based page index"},
+        {"name": "limit", "type": "int", "default": 10, "description": "page size"},
+        {"name": "search", "type": "string", "required": false, "description": "keyword to filter title/content"},
+        {"name": "dateFilter", "type": "string", "default": "all", "description": "backend-specific time filter"}
+      ],
+      "requestBody": null,
+      "responses": {
+        "200": {
+          "result": "PostListResponse"
+        }
+      }
+    },
+    {
+      "name": "Get post detail",
+      "method": "GET",
+      "path": "/post/detail/{postId}",
+      "authRequired": false,
+      "pathParams": [{"name": "postId", "type": "long"}],
+      "requestBody": null,
+      "responses": {
+        "200": {
+          "result": "PostResponse"
+        },
+        "404": {
+          "message": "Người dùng không tồn tại / Post not found"
+        }
+      }
+    },
+    {
+      "name": "Create post",
+      "method": "POST",
+      "path": "/post/create/{userId}",
+      "authRequired": false,
+      "notes": "Requires the target user to exist and be active.",
+      "pathParams": [{"name": "userId", "type": "long"}],
+      "requestBody": {
+        "contentType": "multipart/form-data",
+        "fields": [
+          {"name": "title", "type": "string", "required": false},
+          {"name": "content", "type": "string", "required": true},
+          {"name": "tags", "type": "string[]", "required": false},
+          {"name": "images", "type": "file[] (MultipartFile)", "required": false},
+          {"name": "files", "type": "file[] (MultipartFile)", "required": false}
+        ]
+      },
+      "responses": {
+        "200": {"result": "PostResponse"},
+        "404": {"message": "Người dùng không tồn tại"}
+      }
+    },
+    {
+      "name": "Update post",
+      "method": "PUT",
+      "path": "/post/update/{postId}",
+      "authRequired": true,
+      "pathParams": [{"name": "postId", "type": "long"}],
+      "requestBody": {
+        "contentType": "multipart/form-data",
+        "fields": [
+          {"name": "content", "type": "string", "required": true},
+          {"name": "tags", "type": "string[]", "required": false},
+          {"name": "images", "type": "file[]", "required": false},
+          {"name": "files", "type": "file[]", "required": false},
+          {"name": "existingMediaIds", "type": "long[]", "required": false, "description": "media to keep"},
+          {"name": "removedMediaIds", "type": "long[]", "required": false, "description": "media to delete"}
+        ]
+      },
+      "responses": {
+        "200": {"result": "PostResponse"},
+        "401": {"code": 9999, "message": "Unauthorized"}
+      }
+    },
+    {
+      "name": "Delete post",
+      "method": "DELETE",
+      "path": "/post/delete/{postId}",
+      "authRequired": true,
+      "pathParams": [{"name": "postId", "type": "long"}],
+      "responses": {
+        "200": {"result": "\"Post deleted successfully\""},
+        "401": {"code": 9999, "message": "Unauthorized"}
+      }
+    },
+    {
+      "name": "List comments of a post",
+      "method": "GET",
+      "path": "/posts/{postId}/comments",
+      "authRequired": false,
+      "pathParams": [{"name": "postId", "type": "long"}],
+      "queryParams": [
+        {"name": "page", "type": "int", "default": 1},
+        {"name": "limit", "type": "int", "default": 10}
+      ],
+      "responses": {
+        "200": {"result": "CommentListResponse"}
+      }
+    },
+    {
+      "name": "Create comment",
+      "method": "POST",
+      "path": "/posts/{postId}/comments",
+      "authRequired": true,
+      "pathParams": [{"name": "postId", "type": "long"}],
+      "requestBody": {
+        "contentType": "application/json",
+        "schema": {
+          "content": {"type": "string", "required": true},
+          "parentId": {"type": "long", "required": false, "description": "set for reply"}
+        }
+      },
+      "responses": {
+        "200": {"result": "CommentResponse"},
+        "401": {"code": 9999, "message": "Unauthorized"}
+      }
+    },
+    {
+      "name": "Update comment",
+      "method": "PUT",
+      "path": "/comments/{commentId}",
+      "authRequired": true,
+      "pathParams": [{"name": "commentId", "type": "long"}],
+      "requestBody": {
+        "contentType": "application/json",
+        "schema": {
+          "content": {"type": "string", "required": true}
+        }
+      },
+      "responses": {
+        "200": {"result": "CommentResponse"},
+        "401": {"code": 9999, "message": "Unauthorized"}
+      }
+    },
+    {
+      "name": "Delete comment",
+      "method": "DELETE",
+      "path": "/comments/{commentId}",
+      "authRequired": true,
+      "pathParams": [{"name": "commentId", "type": "long"}],
+      "responses": {
+        "200": {"result": "\"Comment deleted successfully\""},
+        "401": {"code": 9999, "message": "Unauthorized"}
+      }
+    },
+    {
+      "name": "Toggle like on a post",
+      "method": "POST",
+      "path": "/posts/{postId}/like",
+      "authRequired": true,
+      "pathParams": [{"name": "postId", "type": "long"}],
+      "responses": {
+        "200": {"result": "\"Like toggled successfully\""},
+        "401": {"code": 9999, "message": "Unauthorized"}
+      }
+    },
+    {
+      "name": "Toggle like on a comment",
+      "method": "POST",
+      "path": "/comments/{commentId}/like",
+      "authRequired": true,
+      "pathParams": [{"name": "commentId", "type": "long"}],
+      "responses": {
+        "200": {"result": "\"Like toggled successfully\""},
+        "401": {"code": 9999, "message": "Unauthorized"}
+      }
+    }
+  ]
+}
+

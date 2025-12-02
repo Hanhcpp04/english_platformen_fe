@@ -5,6 +5,9 @@ import AdminDashboard from './Dashboard';
 import UserManagement from './UserManagement';
 import TopicVocabManagement from './TopicVocabManagement';
 import VocabManagement from './VocabManagement';
+import GrammarManagement from './GrammarManagement';
+import WritingManagement from './WritingManagement';
+import ForumManagement from './ForumManagement';
 
 const Admin = () => {
   return (
@@ -15,7 +18,9 @@ const Admin = () => {
         <Route path="/users" element={<UserManagement />} />
         <Route path="/topics" element={<TopicVocabManagement />} />
         <Route path="/vocabulary" element={<VocabManagement />} />
-        {/* Add more routes as needed */}
+        <Route path="/grammar" element={<GrammarManagement />} />
+        <Route path="/writing" element={<WritingManagement />} />
+        <Route path="/forum" element={<ForumManagement />} />
       </Routes>
     </AdminLayout>
   );

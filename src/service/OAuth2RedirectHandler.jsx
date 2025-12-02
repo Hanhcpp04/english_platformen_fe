@@ -47,12 +47,20 @@ function OAuth2RedirectHandler() {
             window.dispatchEvent(new Event('userLoggedIn'));
             window.dispatchEvent(new Event('storage'));
             
-            console.log('✅ OAuth2 - Redirecting to dashboard...');
+            // Điều hướng dựa trên role
+            const userRole = userData?.role;
+            console.log('✅ OAuth2 - User role:', userRole);
             
             // Đợi một chút để đảm bảo events được xử lý
             await new Promise(resolve => setTimeout(resolve, 200));
             
-            navigate('/dashboard', { replace: true });
+            if (userRole === 'ADMIN') {
+              console.log('✅ OAuth2 - Redirecting to admin dashboard...');
+              navigate('/admin/dashboard', { replace: true });
+            } else {
+              console.log('✅ OAuth2 - Redirecting to user dashboard...');
+              navigate('/dashboard', { replace: true });
+            }
           } catch (profileError) {
             console.error('❌ OAuth2 - Error fetching user profile:', profileError);
             setError('Không thể lấy thông tin người dùng. Đang chuyển hướng...');
@@ -60,6 +68,7 @@ function OAuth2RedirectHandler() {
             // Vẫn dispatch event để ít nhất token được nhận biết
             window.dispatchEvent(new Event('userLoggedIn'));
             
+            // Fallback về user dashboard nếu không lấy được profile
             setTimeout(() => {
               navigate('/dashboard', { replace: true });
             }, 1000);

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { X, Image as ImageIcon, Tag, FileText, Paperclip } from "lucide-react";
-import { getUserFromLocalStorage } from "../../../utils/userUtils";
-import { createPost } from "../../../service/postService";
+import { X, Image as ImageIcon, Tag, FileText, Paperclip, ChevronLeft, ChevronRight } from "lucide-react";
+import { getUserFromLocalStorage } from "../../../../utils/userUtils";
+import { updatePost } from "../../../../service/postService";
 import { toast } from "react-toastify";
 
-export default function CreatePostModal({ isOpen, onClose }) {
-  const [title, setTitle] = useState("");
+export default function EditPostModal({ isOpen, onClose, post, onSave }) {
   const [content, setContent] = useState("");
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
@@ -13,13 +12,54 @@ export default function CreatePostModal({ isOpen, onClose }) {
   const [files, setFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+  const [originalMedia, setOriginalMedia] = useState([]);
 
   useEffect(() => {
     const user = getUserFromLocalStorage();
     setCurrentUser(user);
   }, []);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (post) {
+      setContent(post.content || "");
+      setTags(post.tags || []);
+      
+      // Store original media with metadata
+      const BASE_UPLOAD_URL = "http://localhost:8088/api/v1/uploads/forum/";
+      const existingImages = (post.media || [])
+        .filter(m => m.mediaType === 'image' && m.url)
+        .map(media => ({
+          url: BASE_UPLOAD_URL + media.url,
+          preview: BASE_UPLOAD_URL + media.url,
+          isExisting: true,
+          mediaId: media.id
+        }));
+      
+      const existingFiles = (post.media || [])
+        .filter(m => m.mediaType === 'file' && m.url)
+        .map(media => ({
+          url: BASE_UPLOAD_URL + media.url,
+          name: media.fileName,
+          size: formatFileSize(media.fileSize),
+          isExisting: true,
+          mediaId: media.id
+        }));
+      
+      setImages(existingImages);
+      setOriginalMedia(existingImages);
+      setFiles(existingFiles);
+    }
+  }, [post]);
+
+  // Format file size helper
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  };
+
+  if (!isOpen || !post) return null;
 
   const handleAddTag = (e) => {
     if (e.key === "Enter" && tagInput.trim() && tags.length < 5) {
@@ -40,13 +80,16 @@ export default function CreatePostModal({ isOpen, onClose }) {
     const newImages = files.map((file) => ({
       file,
       preview: URL.createObjectURL(file),
+      isExisting: false,
     }));
-    setImages([...images, ...newImages].slice(0, 4)); // Max 4 images
+    setImages([...images, ...newImages].slice(0, 4));
   };
 
   const handleRemoveImage = (index) => {
     const newImages = [...images];
-    URL.revokeObjectURL(newImages[index].preview);
+    if (newImages[index].preview) {
+      URL.revokeObjectURL(newImages[index].preview);
+    }
     newImages.splice(index, 1);
     setImages(newImages);
   };
@@ -58,7 +101,7 @@ export default function CreatePostModal({ isOpen, onClose }) {
       name: file.name,
       size: (file.size / (1024 * 1024)).toFixed(2) + " MB",
     }));
-    setFiles([...files, ...newFiles].slice(0, 5)); // Max 5 files
+    setFiles([...files, ...newFiles].slice(0, 5));
   };
 
   const handleRemoveFile = (index) => {
@@ -70,77 +113,174 @@ export default function CreatePostModal({ isOpen, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!content.trim()) {
-      toast.warning("Vui lòng nhập nội dung!");
-      return;
-    }
-
-    if (!currentUser || !currentUser.id) {
-      toast.error("Vui lòng đăng nhập để đăng bài!");
+      toast.error("Vui lòng nhập nội dung!");
       return;
     }
 
     setIsSubmitting(true);
-    
     try {
-      const postData = {
-        title: title.trim() || null,
+      // Separate existing images from new ones
+      const existingImages = images.filter(img => img.isExisting);
+      const newImages = images.filter(img => !img.isExisting);
+
+      // Separate existing files from new ones
+      const existingFiles = files.filter(f => f.isExisting);
+      const newFiles = files.filter(f => !f.isExisting);
+
+      // Find removed images
+      const removedImages = originalMedia.filter(
+        orig => !images.find(img => img.url === orig.url)
+      );
+
+      // Find removed files (we need to track original files)
+      const originalFiles = (post.media || [])
+        .filter(m => m.mediaType === 'file' && m.url)
+        .map(m => ({ mediaId: m.id, url: "http://localhost:8088/api/v1/uploads/forum/" + m.url }));
+      
+      const removedFiles = originalFiles.filter(
+        orig => !files.find(f => f.url === orig.url)
+      );
+
+      // Prepare update data
+      const updateData = {
         content: content.trim(),
         tags: tags,
-        images: images,
-        files: files,
+        newImages: newImages,
+        newFiles: newFiles,
+        existingMediaIds: [
+          ...existingImages.map(img => img.mediaId).filter(id => id != null),
+          ...existingFiles.map(f => f.mediaId).filter(id => id != null)
+        ],
+        removedMediaIds: [
+          ...removedImages.map(img => img.mediaId).filter(id => id != null),
+          ...removedFiles.map(f => f.mediaId).filter(id => id != null)
+        ],
       };
 
-      const response = await createPost(postData, currentUser.id);
+      console.log("Update data being sent:", {
+        postId: post.id,
+        content: updateData.content,
+        tags: updateData.tags,
+        newImagesCount: updateData.newImages.length,
+        existingMediaIds: updateData.existingMediaIds,
+        removedMediaIds: updateData.removedMediaIds,
+      });
+
+      const response = await updatePost(post.id, updateData);
+      
+      console.log("Update response:", response);
       
       if (response.code === 1000) {
-        toast.success("Đã đăng bài viết thành công!");
-        
-        // Reset form
-        setTitle("");
-        setContent("");
-        setTags([]);
-        
-        // Clean up image previews
-        images.forEach(img => URL.revokeObjectURL(img.preview));
-        setImages([]);
-        setFiles([]);
-        
+        toast.success("Cập nhật bài viết thành công!");
+        onSave(response.result);
         onClose();
-        
-        // Optionally refresh the post list
-        window.location.reload();
+      } else {
+        toast.error(response.message || "Cập nhật bài viết thất bại!");
       }
     } catch (error) {
-      console.error("Error creating post:", error);
-      
-      // Show appropriate error message based on API response code or HTTP status
-      if (error.code === 9999 || error.response?.status === 401) {
-        toast.error(error.message || "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
-      } else if (error.code === 404 || error.response?.status === 404) {
-        toast.error(error.message || "Không tìm thấy người dùng");
-      } else if (error.response?.status === 409) {
-        toast.error(error.response?.data?.message || "Bài viết đã tồn tại hoặc có xung đột dữ liệu");
-      } else {
-        toast.error(error.message || "Không thể đăng bài viết. Vui lòng thử lại!");
-      }
+      console.error("Error updating post:", error);
+      toast.error("Có lỗi xảy ra khi cập nhật bài viết!");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handlePrevImage = (e) => {
+    e.stopPropagation();
+    setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+  };
+
+  const handleNextImage = (e) => {
+    e.stopPropagation();
+    setSelectedImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+  };
+
   return (
-    <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
-    >
+    <>
+      {/* Image Viewer Modal */}
+      {selectedImageIndex !== null && images[selectedImageIndex] && (
+        <div 
+          className="fixed inset-0 bg-black/95 flex items-center justify-center z-[60]"
+          onClick={() => setSelectedImageIndex(null)}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setSelectedImageIndex(null)}
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
+          >
+            <X size={32} className="text-white" />
+          </button>
+
+          {/* Image Counter */}
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-black/50 rounded-full text-white text-sm z-10">
+            {selectedImageIndex + 1} / {images.length}
+          </div>
+
+          {/* Previous Button */}
+          {images.length > 1 && (
+            <button
+              onClick={handlePrevImage}
+              className="absolute left-4 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
+            >
+              <ChevronLeft size={32} className="text-white" />
+            </button>
+          )}
+
+          {/* Image */}
+          <img
+            src={(images[selectedImageIndex].preview || images[selectedImageIndex].url || '').replace('w=400', 'w=1920')}
+            alt={`Image ${selectedImageIndex + 1}`}
+            className="max-w-[98%] max-h-[90vh] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Next Button */}
+          {images.length > 1 && (
+            <button
+              onClick={handleNextImage}
+              className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
+            >
+              <ChevronRight size={32} className="text-white" />
+            </button>
+          )}
+
+          {/* Thumbnails */}
+          {images.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 max-w-[90%] overflow-x-auto px-4 py-2 bg-black/50 rounded-lg">
+              {images.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img.preview || img.url}
+                  alt={`Thumbnail ${idx + 1}`}
+                  className={`w-16 h-16 object-cover rounded cursor-pointer transition-all ${
+                    idx === selectedImageIndex 
+                      ? 'ring-2 ring-white scale-110' 
+                      : 'opacity-50 hover:opacity-100'
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImageIndex(idx);
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Edit Post Modal */}
       <div 
-        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        onClick={onClose}
       >
+        <div 
+          className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col mt-15"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
         <div className="px-4 py-3 border-b border-gray-200">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-gray-900">Tạo bài viết</h2>
+            <h2 className="text-lg font-bold text-gray-900">Chỉnh sửa bài viết</h2>
             <button
               onClick={onClose}
               className="p-1 hover:bg-gray-100 rounded-full transition-colors"
@@ -161,7 +301,7 @@ export default function CreatePostModal({ isOpen, onClose }) {
                 <h3 className="font-semibold text-sm text-gray-900">
                   {currentUser.fullname || currentUser.username}
                 </h3>
-                <p className="text-xs text-gray-500">Đang tạo bài viết mới</p>
+                <p className="text-xs text-gray-500">Đang chỉnh sửa bài viết</p>
               </div>
             </div>
           )}
@@ -170,36 +310,31 @@ export default function CreatePostModal({ isOpen, onClose }) {
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-3">
-            {/* Title */}
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Tiêu đề (không bắt buộc)"
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 font-semibold"
-            />
-
             {/* Content */}
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Bạn đang nghĩ gì?"
-              className="w-full px-4 py-3 border-0 focus:outline-none text-gray-900 placeholder-gray-500 min-h-[200px] resize-none text-lg leading-relaxed"
+              className="w-full px-3 py-2 border-0 focus:outline-none text-gray-900 placeholder-gray-500 min-h-[100px] resize-none text-base leading-relaxed"
+              autoFocus
             />
-
             {/* Images Preview */}
             {images.length > 0 && (
               <div className="grid grid-cols-2 gap-2">
                 {images.map((img, idx) => (
                   <div key={idx} className="relative group">
                     <img
-                      src={img.preview}
+                      src={img.preview || img.url}
                       alt={`Preview ${idx + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
+                      className="w-full h-50 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => setSelectedImageIndex(idx)}
                     />
                     <button
                       type="button"
-                      onClick={() => handleRemoveImage(idx)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveImage(idx);
+                      }}
                       className="absolute top-1 right-1 p-1 bg-white/90 hover:bg-white rounded-full shadow-md transition-all"
                     >
                       <X size={16} className="text-gray-700" />
@@ -258,7 +393,7 @@ export default function CreatePostModal({ isOpen, onClose }) {
             )}
           </div>
 
-          {/* Add Tag Input (collapsible) */}
+          {/* Add Tag Input */}
           {tagInput !== null && tags.length < 5 && (
             <div className="px-4 pb-2">
               <input
@@ -285,11 +420,11 @@ export default function CreatePostModal({ isOpen, onClose }) {
                 multiple
                 onChange={handleImageUpload}
                 className="hidden"
-                id="image-upload"
+                id="edit-image-upload"
                 disabled={images.length >= 4}
               />
               <label
-                htmlFor="image-upload"
+                htmlFor="edit-image-upload"
                 className={`p-2 rounded-lg transition-colors cursor-pointer ${
                   images.length >= 4
                     ? 'opacity-50 cursor-not-allowed'
@@ -321,11 +456,11 @@ export default function CreatePostModal({ isOpen, onClose }) {
                 multiple
                 onChange={handleFileUpload}
                 className="hidden"
-                id="file-upload"
+                id="edit-file-upload"
                 disabled={files.length >= 5}
               />
               <label
-                htmlFor="file-upload"
+                htmlFor="edit-file-upload"
                 className={`p-2 rounded-lg transition-colors cursor-pointer ${
                   files.length >= 5
                     ? 'opacity-50 cursor-not-allowed'
@@ -344,10 +479,11 @@ export default function CreatePostModal({ isOpen, onClose }) {
             disabled={isSubmitting || !content.trim()}
             className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
           >
-            {isSubmitting ? 'Đang đăng...' : 'Đăng'}
+            {isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi'}
           </button>
         </div>
       </div>
     </div>
+  </>
   );
 }

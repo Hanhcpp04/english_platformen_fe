@@ -1,310 +1,260 @@
-import React, { useState, useMemo } from "react";
-import { Link,useNavigate } from "react-router-dom";
-import PostList from "../../../components/Popups/forum/PostList";
-import ForumHeader from "../../../components/Popups/forum/ForumHeader";
-import ForumSidebar from "../../../components/Popups/forum/ForumSidebar";
-import FilterBar from "../../../components/Popups/forum/FilterBar";
-import Pagination from "../../../components/Popups/forum/Pagination";
-import { Plus } from "lucide-react";
-
-const mockPosts = [
-  {
-    id: 1,
-    title: "How to improve IELTS Writing Task 2?",
-    content:
-      "I've been struggling with IELTS Writing Task 2. Can anyone share tips on how to structure essays better and improve band score? Any recommended resources?",
-    author: {
-      id: 1,
-      name: "Nguyễn Văn A",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    },
-    created_at: "2 giờ trước",
-    likes_count: 45,
-    comments_count: 23,
-    views: 156,
-    tags: ["IELTS", "Writing"],
-    images: [],
-    pinned: true,
-    locked: false,
-  },
-  {
-    id: 2,
-    title: "Kinh nghiệm luyện nghe tiếng Anh qua Podcast",
-    content:
-      "Hãy nghe podcast, xem phim không phụ đề và ghi chú lại các từ mới. Đừng ngại nghe đi nghe lại nhiều lần để quen với các giọng nói khác nhau. Mình recommend BBC Learning English và TED Talks.",
-    author: {
-      id: 2,
-      name: "Trần Thị B",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    },
-    created_at: "5 giờ trước",
-    likes_count: 32,
-    comments_count: 15,
-    views: 234,
-    tags: ["Listening", "Tips"],
-    images: ["https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=400"],
-    pinned: false,
-    locked: false,
-  },
-  {
-    id: 3,
-    title: "Top 10 Common Grammar Mistakes Vietnamese Learners Make",
-    content:
-      "After years of teaching English, I've noticed these recurring grammar mistakes. Let's discuss and learn together! Articles (a/an/the), Present Perfect vs Simple Past, Prepositions...",
-    author: {
-      id: 3,
-      name: "John Smith",
-      avatar: "https://randomuser.me/api/portraits/men/45.jpg",
-    },
-    created_at: "1 ngày trước",
-    likes_count: 67,
-    comments_count: 42,
-    views: 589,
-    tags: ["Grammar", "Tips"],
-    images: [
-      "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400",
-      "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400",
-    ],
-    pinned: false,
-    locked: false,
-  },
-  {
-    id: 4,
-    title: "Free Speaking Practice Session - Join us this Saturday!",
-    content:
-      "We're organizing a free online speaking practice session this Saturday 2PM. All levels welcome! Topics: Daily conversations, IELTS Speaking Part 1-2-3. Limited slots available!",
-    author: {
-      id: 4,
-      name: "Lê Thị Mai",
-      avatar: "https://randomuser.me/api/portraits/women/50.jpg",
-    },
-    created_at: "3 giờ trước",
-    likes_count: 89,
-    comments_count: 56,
-    views: 412,
-    tags: ["Speaking", "Event"],
-    images: [],
-    pinned: false,
-    locked: true,
-  },
-  {
-    id: 5,
-    title: "Best YouTube Channels for Learning English",
-    content:
-      "Sharing my favorite YouTube channels that helped me improve from B1 to C1 level. These are free and super effective!",
-    author: {
-      id: 5,
-      name: "Phạm Văn C",
-      avatar: "https://randomuser.me/api/portraits/men/22.jpg",
-    },
-    created_at: "4 ngày trước",
-    likes_count: 120,
-    comments_count: 78,
-    views: 892,
-    tags: ["Resources", "Tips"],
-    images: ["https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400"],
-    pinned: false,
-    locked: false,
-  },
-  {
-    id: 6,
-    title: "Chia sẻ bộ flashcard 3000 từ TOEIC",
-    content:
-      "Mình vừa tổng hợp xong bộ flashcard 3000 từ vựng TOEIC theo từng chủ đề. Ai cần thì comment bên dưới nhé!",
-    author: {
-      id: 6,
-      name: "Đỗ Thị D",
-      avatar: "https://randomuser.me/api/portraits/women/33.jpg",
-    },
-    created_at: "10 ngày trước",
-    likes_count: 234,
-    comments_count: 145,
-    views: 1523,
-    tags: ["TOEIC", "Vocabulary", "Resources"],
-    images: [
-      "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400",
-      "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=400",
-      "https://images.unsplash.com/photo-1513258496099-48168024aec0?w=400",
-    ],
-    pinned: false,
-    locked: false,
-  },
-  {
-    id: 7,
-    title: "English Pronunciation Tips for Vietnamese Speakers",
-    content:
-      "Struggling with TH sounds? Can't differentiate between /l/ and /r/? Let's practice together and share techniques!",
-    author: {
-      id: 7,
-      name: "Michael Brown",
-      avatar: "https://randomuser.me/api/portraits/men/67.jpg",
-    },
-    created_at: "15 ngày trước",
-    likes_count: 78,
-    comments_count: 34,
-    views: 456,
-    tags: ["Pronunciation", "Tips"],
-    images: [],
-    pinned: false,
-    locked: false,
-  },
-  {
-    id: 8,
-    title: "Study Abroad Experience - UK Universities",
-    content:
-      "I just finished my Master's in the UK. Happy to answer questions about application process, scholarships, IELTS requirements, and student life!",
-    author: {
-      id: 8,
-      name: "Hoàng Thị E",
-      avatar: "https://randomuser.me/api/portraits/women/68.jpg",
-    },
-    created_at: "20 ngày trước",
-    likes_count: 156,
-    comments_count: 89,
-    views: 1234,
-    tags: ["Study Abroad", "IELTS"],
-    images: [
-      "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400",
-    ],
-    pinned: false,
-    locked: false,
-  },
-];
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { 
+  Plus, 
+  Search, 
+  BookOpen, 
+  MessageSquare, 
+  TrendingUp, 
+  Users, 
+  Award,
+  Sparkles,
+  FileText,
+  Heart,
+  Eye,
+  ArrowRight,
+  Zap,
+  Target,
+  BookMarked
+} from "lucide-react";
 
 export default function ForumHome() {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState("new");
-  const [timeFilter, setTimeFilter] = useState("all");
-  const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 10;
-  const totalPages = 3;
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Helper function to parse time ago string to date
-  const parseTimeAgo = (timeAgo) => {
-    const now = new Date();
-    if (timeAgo.includes("giờ trước")) {
-      const hours = parseInt(timeAgo);
-      return new Date(now - hours * 60 * 60 * 1000);
-    } else if (timeAgo.includes("ngày trước")) {
-      const days = parseInt(timeAgo);
-      return new Date(now - days * 24 * 60 * 60 * 1000);
-    } else if (timeAgo.includes("tuần trước")) {
-      const weeks = parseInt(timeAgo);
-      return new Date(now - weeks * 7 * 24 * 60 * 60 * 1000);
-    } else if (timeAgo.includes("tháng trước")) {
-      const months = parseInt(timeAgo);
-      return new Date(now - months * 30 * 24 * 60 * 60 * 1000);
-    }
-    return now;
+  // Forum statistics
+  const stats = {
+    totalPosts: 1234,
+    totalComments: 5678,
+    totalMembers: 890,
+    todayActive: 45
   };
 
-  // Filter posts by time
-  const filterByTime = (posts, timeFilter) => {
-    if (timeFilter === "all") return posts;
-    
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
-    const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
-
-    return posts.filter(post => {
-      const postDate = parseTimeAgo(post.created_at);
-      
-      switch (timeFilter) {
-        case "today":
-          return postDate >= today;
-        case "week":
-          return postDate >= weekAgo;
-        case "month":
-          return postDate >= monthAgo;
-        default:
-          return true;
-      }
-    });
-  };
-
-  const posts = useMemo(() => {
-    let filtered = [...mockPosts];
-    
-    // Apply time filter first
-    filtered = filterByTime(filtered, timeFilter);
-    
-    // Separate pinned posts
-    const pinnedPosts = filtered.filter(post => post.pinned);
-    const regularPosts = filtered.filter(post => !post.pinned);
-    
-    // Apply sorting based on filter type
-    let sortedPosts = [...regularPosts];
-    
-    if (filter === "hot") {
-      // Hot: based on combination of likes and comments (engagement)
-      sortedPosts.sort((a, b) => 
-        (b.likes_count + b.comments_count * 2) - (a.likes_count + a.comments_count * 2)
-      );
-    } else if (filter === "top") {
-      // Top: based on likes only
-      sortedPosts.sort((a, b) => b.likes_count - a.likes_count);
-    } else if (filter === "active") {
-      // Active: based on comments (recent activity)
-      sortedPosts.sort((a, b) => b.comments_count - a.comments_count);
-    } else {
-      // New: based on post ID (newest first)
-      sortedPosts.sort((a, b) => b.id - a.id);
+  // Main features
+  const features = [
+    {
+      icon: BookOpen,
+      title: "Xem tất cả bài viết",
+      description: "Khám phá hàng ngàn bài viết từ cộng đồng học tiếng Anh",
+      color: "from-blue-500 to-blue-600",
+      action: () => navigate("/forum/posts"),
+      stats: `${stats.totalPosts} bài viết`
+    },
+    {
+      icon: Plus,
+      title: "Tạo bài viết mới",
+      description: "Chia sẻ kiến thức, kinh nghiệm hoặc đặt câu hỏi",
+      color: "from-green-500 to-green-600",
+      action: () => navigate("/forum/create"),
+      stats: "Bắt đầu ngay"
+    },
+    {
+      icon: Search,
+      title: "Tìm kiếm",
+      description: "Tìm bài viết, chủ đề hoặc người dùng bạn quan tâm",
+      color: "from-purple-500 to-purple-600",
+      action: () => navigate("/forum/search"),
+      stats: "Khám phá"
+    },
+    {
+      icon: Users,
+      title: "Hồ sơ của tôi",
+      description: "Quản lý bài viết, bình luận và hoạt động của bạn",
+      color: "from-orange-500 to-orange-600",
+      action: () => navigate("/forum/my-posts"),
+      stats: "Xem hồ sơ"
     }
-    
-    // Pin posts always on top, then sorted posts
-    return [...pinnedPosts, ...sortedPosts];
-  }, [filter, timeFilter]);
+  ];
+
+  // Quick topics
+  const topics = [
+    { name: "IELTS", icon: Award, count: 456 },
+    { name: "Grammar", icon: BookMarked, count: 789 },
+    { name: "Vocabulary", icon: Sparkles, count: 634 },
+    { name: "Speaking", icon: MessageSquare, count: 342 },
+    { name: "Writing", icon: FileText, count: 287 },
+    { name: "Listening", icon: Zap, count: 198 }
+  ];
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/forum/search?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* <ForumHeader /> */}
-
-      <div className="container mx-auto px-4 py-6">
-        
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar - Sticky but respects footer, hidden on mobile */}
-          <div className="hidden lg:block lg:col-span-1">
-            <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
-                
-              <ForumSidebar />
-            </div>
+      {/* Compact Header */}
+      <div className="bg-gradient-to-r from-green-350 to-green-500 text-white">
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
+          <div className="text-center mb-8">
+            <h1 className="font-heading font-bold text-4xl mb-3">
+              Forum Học Tiếng Anh
+            </h1>
+            <p className="text-primary-100 text-lg max-w-2xl mx-auto">
+              Chia sẻ kinh nghiệm và cùng nhau tiến bộ
+            </p>
           </div>
-
-          {/* Main Content - Scrollable */}
-          <main className="lg:col-span-3">
-            <FilterBar 
-              onFilterChange={setFilter}
-              onTimeChange={setTimeFilter}
-            />
-
-            <PostList 
-              posts={posts} 
-              loading={loading} 
-              onPostClick={(id) => navigate(`/forum/${id}`)} 
-            />
-
-            <Pagination 
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </main>
+           <div className="grid grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-gray-200">
+            <div className="text-2xl font-bold text-gray-900 mb-1">{stats.totalPosts}</div>
+            <div className="text-xs text-gray-600">Bài viết</div>
+          </div>
+          <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-gray-200">
+            <div className="text-2xl font-bold text-gray-900 mb-1">{stats.totalComments}</div>
+            <div className="text-xs text-gray-600">Bình luận</div>
+          </div>
+          <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-gray-200">
+            <div className="text-2xl font-bold text-gray-900 mb-1">{stats.totalMembers}</div>
+            <div className="text-xs text-gray-600">Thành viên</div>
+          </div>
+          <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-gray-200">
+            <div className="text-2xl font-bold text-gray-900 mb-1">{stats.todayActive}</div>
+            <div className="text-xs text-gray-600">Hoạt động</div>
+          </div>
+        </div>
         </div>
       </div>
 
-      {/* Floating Action Button */}
-      <button
-        className="fixed bottom-8 right-8 w-14 h-14 bg-black text-white rounded-full shadow-xl hover:scale-110 transition-transform z-50 flex items-center justify-center group"
-        onClick={() => navigate("/forum/create")}
-        aria-label="Tạo bài mới"
-      >
-        <Plus size={28} />
-        <span className="absolute right-full mr-3 bg-dark-primary text-white px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          Tạo bài mới
-        </span>
-      </button>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        
+        {/* Main Features - 4 Columns */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <div
+                key={index}
+                onClick={feature.action}
+                className="group bg-white rounded-xl p-4 shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-200 hover:border-primary-300"
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                    <Icon size={28} className="text-white" strokeWidth={2.5} />
+                  </div>
+                  
+                  <h3 className="font-heading font-bold text-sm text-gray-900 mb-1 group-hover:text-primary-600 transition-colors">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-500 text-xs mb-2">
+                    {feature.stats}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Quick Topics Section */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-8">
+          <h2 className="font-heading font-bold text-lg text-gray-900 mb-4 flex items-center">
+            <TrendingUp size={20} className="mr-2 text-primary-600" />
+            Chủ đề phổ biến
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {topics.map((topic, index) => {
+              const TopicIcon = topic.icon;
+              return (
+                <div
+                  key={index}
+                  onClick={() => navigate(`/forum/posts?topic=${topic.name.toLowerCase()}`)}
+                  className="bg-gray-50 hover:bg-gray-100 rounded-lg p-3 cursor-pointer transition-colors border border-gray-100 hover:border-primary-300"
+                >
+                  <div className="flex flex-col items-center text-center">
+                    <TopicIcon size={24} className="text-primary-600 mb-2" />
+                    <div className="font-medium text-xs text-gray-900 mb-1">{topic.name}</div>
+                    <div className="text-xs text-gray-500">{topic.count} bài</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Recent Activity Section */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Trending Posts */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <h2 className="font-heading font-bold text-lg text-gray-900 mb-4 flex items-center">
+              <Heart size={20} className="mr-2 text-red-500" />
+              Bài viết nổi bật
+            </h2>
+            <div className="space-y-3">
+              {[1, 2, 3].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-start p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                  onClick={() => navigate('/forum/posts')}
+                >
+                  <div className="flex-1">
+                    <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-1">
+                      Tips học IELTS hiệu quả trong 3 tháng
+                    </h3>
+                    <div className="flex items-center text-xs text-gray-500 space-x-3">
+                      <span className="flex items-center">
+                        <Eye size={14} className="mr-1" />
+                        {Math.floor(Math.random() * 500 + 100)}
+                      </span>
+                      <span className="flex items-center">
+                        <MessageSquare size={14} className="mr-1" />
+                        {Math.floor(Math.random() * 50 + 10)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => navigate('/forum/posts')}
+              className="w-full mt-4 text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center justify-center py-2 hover:bg-primary-50 rounded-lg transition-colors"
+            >
+              Xem tất cả
+              <ArrowRight size={16} className="ml-1" />
+            </button>
+          </div>
+
+          {/* New Posts */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <h2 className="font-heading font-bold text-lg text-gray-900 mb-4 flex items-center">
+              <Sparkles size={20} className="mr-2 text-yellow-500" />
+              Bài viết mới nhất
+            </h2>
+            <div className="space-y-3">
+              {[1, 2, 3].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-start p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                  onClick={() => navigate('/forum/posts')}
+                >
+                  <div className="flex-1">
+                    <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-1">
+                      Cách học từ vựng hiệu quả cho người mới bắt đầu
+                    </h3>
+                    <div className="flex items-center text-xs text-gray-500 space-x-3">
+                      <span className="flex items-center">
+                        <Eye size={14} className="mr-1" />
+                        {Math.floor(Math.random() * 100 + 10)}
+                      </span>
+                      <span className="flex items-center">
+                        <MessageSquare size={14} className="mr-1" />
+                        {Math.floor(Math.random() * 20 + 1)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => navigate('/forum/posts')}
+              className="w-full mt-4 text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center justify-center py-2 hover:bg-primary-50 rounded-lg transition-colors"
+            >
+              Xem tất cả
+              <ArrowRight size={16} className="ml-1" />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
