@@ -63,7 +63,6 @@ export default function MyPostsPage() {
       });
 
       if (response.code === 1000 && response.result) {
-        const BASE_UPLOAD_URL = "http://localhost:8088/api/v1/uploads/forum/";
         const mappedPosts = response.result.posts.map(post => ({
           id: post.id,
           title: post.title,
@@ -77,12 +76,12 @@ export default function MyPostsPage() {
           likes_count: post.likesCount,
           comments_count: post.commentsCount,
           views: post.viewsCount,
-          images: post.media?.filter(m => m.mediaType === 'image' && m.url).map(m => BASE_UPLOAD_URL + m.url) || [],
+          images: post.media?.filter(m => m.mediaType === 'image' && m.url).map(m => m.url) || [],
           media: post.media || [], // Keep original media for editing
           files: post.media?.filter(m => m.mediaType === 'file' && m.url).map(m => ({
             name: m.fileName,
             size: formatFileSize(m.fileSize),
-            url: BASE_UPLOAD_URL + m.url,
+            url: m.url,
             id: m.id,
           })) || [],
           hasLiked: post.isLiked,

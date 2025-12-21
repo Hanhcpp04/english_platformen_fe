@@ -45,7 +45,7 @@ export default function ForumHome() {
       title: "Tạo bài viết mới",
       description: "Chia sẻ kiến thức, kinh nghiệm hoặc đặt câu hỏi",
       color: "from-green-500 to-green-600",
-      action: () => navigate("/forum/create"),
+      action: () => navigate("/forum/posts"),
       stats: "Bắt đầu ngay"
     },
     {
@@ -53,7 +53,7 @@ export default function ForumHome() {
       title: "Tìm kiếm",
       description: "Tìm bài viết, chủ đề hoặc người dùng bạn quan tâm",
       color: "from-purple-500 to-purple-600",
-      action: () => navigate("/forum/search"),
+      action: () => navigate("/forum/posts"),
       stats: "Khám phá"
     },
     {

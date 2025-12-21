@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   Edit, 
@@ -10,97 +10,88 @@ import {
   Award,
   Filter,
   Download,
-  Eye
+  Eye,
+  RefreshCw
 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import * as adminService from '../../../service/adminService';
 
 const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');
-  
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [editingUser, setEditingUser] = useState(null);
 
-  // Replace static users array with stateful users so we can modify it
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      username: 'johndoe',
-      email: 'john.doe@example.com',
-      fullname: 'John Doe',
-      role: 'USER',
-      totalXp: 12450,
-      level: 5,
-      isActive: true,
-      createdAt: '2024-01-15',
-      lastActive: '2 hours ago',
-    },
-    {
-      id: 2,
-      username: 'janesmith',
-      email: 'jane.smith@example.com',
-      fullname: 'Jane Smith',
-      role: 'USER',
-      totalXp: 8920,
-      level: 4,
-      isActive: true,
-      createdAt: '2024-02-20',
-      lastActive: '5 minutes ago',
-    },
-    {
-      id: 3,
-      username: 'admin',
-      email: 'admin@englishsmart.com',
-      fullname: 'Admin User',
-      role: 'ADMIN',
-      totalXp: 0,
-      level: 0,
-      isActive: true,
-      createdAt: '2023-12-01',
-      lastActive: 'Just now',
-    },
-    {
-      id: 4,
-      username: 'mikejohnson',
-      email: 'mike.johnson@example.com',
-      fullname: 'Mike Johnson',
-      role: 'USER',
-      totalXp: 15680,
-      level: 6,
-      isActive: false,
-      createdAt: '2024-01-08',
-      lastActive: '2 days ago',
-    },
-    {
-      id: 5,
-      username: 'sarahwilson',
-      email: 'sarah.wilson@example.com',
-      fullname: 'Sarah Wilson',
-      role: 'USER',
-      totalXp: 6540,
-      level: 3,
-      isActive: true,
-      createdAt: '2024-03-12',
-      lastActive: '1 hour ago',
-    },
-  ]);
+  // Fetch users từ API
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const response = await adminService.getAllUsers(currentPage, pageSize);
+      if (response.code === 1000 && response.result) {
+        setUsers(response.result.content || []);
+        setTotalPages(response.result.totalPages || 0);
+        setTotalElements(response.result.totalElements || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Không thể tải danh sách người dùng');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [currentPage, pageSize]);
+
+  // Toggle active/inactive
+  const handleToggleActive = async (userId, currentStatus) => {
+    const status = currentStatus ? 'delete' : 'restore';
+    try {
+      const response = await adminService.deleteOrRestoreUser(userId, status);
+      if (response.code === 1000) {
+        toast.success(currentStatus ? 'Đã vô hiệu hóa tài khoản' : 'Đã khôi phục tài khoản');
+        fetchUsers(); // Refresh data
+      }
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      toast.error('Không thể cập nhật trạng thái tài khoản');
+    }
+  };
+
+  // Update role
+  const handleUpdateRole = async (userId, newRole) => {
+    try {
+      const response = await adminService.updateUserRole(userId, newRole);
+      if (response.code === 1000) {
+        toast.success('Đã cập nhật vai trò người dùng');
+        fetchUsers(); // Refresh data
+      }
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast.error('Không thể cập nhật vai trò');
+    }
+  };
 
   const filteredUsers = users.filter((user) => {
-    const matchesSearch = user.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.username.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = user.fullname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         user.username?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = selectedRole === 'all' || user.role === selectedRole;
     return matchesSearch && matchesRole;
   });
 
   const stats = [
-    { label: 'Tổng người dùng', value: users.length, icon: User, color: 'blue' },
+    { label: 'Tổng người dùng', value: totalElements, icon: User, color: 'blue' },
     { label: 'Người dùng hoạt động', value: users.filter(u => u.isActive).length, icon: Shield, color: 'green' },
     { label: 'Quản trị viên', value: users.filter(u => u.role === 'ADMIN').length, icon: Shield, color: 'purple' },
-    { label: 'Tổng XP', value: users.reduce((acc, u) => acc + u.totalXp, 0).toLocaleString(), icon: Award, color: 'yellow' },
+    { label: 'Tổng XP', value: users.reduce((acc, u) => acc + (u.totalXp || 0), 0).toLocaleString(), icon: Award, color: 'yellow' },
   ];
-
-  // Toggle active/inactive
-  const handleToggleActive = (userId) => {
-    setUsers((prev) => prev.map(u => u.id === userId ? { ...u, isActive: !u.isActive } : u));
-  };
 
   return (
     <div className="space-y-4">
@@ -113,6 +104,13 @@ const UserManagement = () => {
 
         {/* Toolbar (search + filter + export) */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={fetchUsers}
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+            title="Làm mới"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -178,26 +176,43 @@ const UserManagement = () => {
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
-                        {user.fullname.charAt(0)}
-                      </div>
+                      {user.avatar ? (
+                        <img 
+                          src={user.avatar} 
+                          alt={user.fullname || user.username}
+                          className="w-8 h-8 rounded-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="32" height="32"%3E%3Crect width="32" height="32" fill="%233b82f6"/%3E%3Ctext x="50%25" y="50%25" fill="white" font-size="16" text-anchor="middle" dy=".3em"%3E' + (user.fullname?.charAt(0) || user.username?.charAt(0) || '?') + '%3C/text%3E%3C/svg%3E';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
+                          {user.fullname?.charAt(0) || user.username?.charAt(0) || '?'}
+                        </div>
+                      )}
                       <div className="min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate">{user.fullname}</div>
+                        <div className="text-sm font-medium text-gray-900 truncate">{user.fullname || user.username}</div>
                         <div className="text-xs text-gray-500 truncate">{user.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-2">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
-                      user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {user.role === 'ADMIN' ? <Shield className="w-3 h-3" /> : <User className="w-3 h-3" />}
-                      {user.role === 'ADMIN' ? 'Quản trị' : 'Người dùng'}
-                    </span>
+                    <select
+                      value={user.role}
+                      onChange={(e) => handleUpdateRole(user.id, e.target.value)}
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border-0 ${
+                        user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                      }`}
+                    >
+                      <option value="USER">Người dùng</option>
+                      <option value="ADMIN">Quản trị</option>
+                    </select>
                   </td>
                   <td className="px-4 py-2">
-                    <div className="text-sm text-gray-900">Cấp {user.level}</div>
-                    <div className="text-xs text-gray-500">{user.totalXp.toLocaleString()} XP</div>
+                    <div className="text-sm text-gray-900">Cấp {user.levelNumber || 1}</div>
+                    <div className="text-xs text-gray-500">{user.levelName || 'Newbie'}</div>
+                    <div className="text-xs text-gray-400 mt-0.5">{(user.totalXp || 0).toLocaleString()} XP</div>
                   </td>
                   <td className="px-4 py-2">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs ${
@@ -206,23 +221,19 @@ const UserManagement = () => {
                       {user.isActive ? 'Hoạt động' : 'Không hoạt động'}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-xs text-gray-500">{user.lastActive}</td>
+                  <td className="px-4 py-2 text-xs text-gray-500">
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : '-'}
+                  </td>
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
-                      <button className="p-1 text-blue-600 hover:text-blue-900" title="Xem">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="p-1 text-gray-600 hover:text-gray-900" title="Sửa">
-                        <Edit className="w-4 h-4" />
-                      </button>
                       <button
-                        onClick={() => handleToggleActive(user.id)}
-                        className={`px-2 py-1 text-xs rounded ${user.isActive ? 'bg-gray-100 text-gray-800' : 'bg-green-100 text-green-800'}`}
-                        title={user.isActive ? 'Tắt kích hoạt' : 'Bật kích hoạt'}
+                        onClick={() => handleToggleActive(user.id, user.isActive)}
+                        className={`px-2 py-1 text-xs rounded ${user.isActive ? 'bg-red-100 text-red-800 hover:bg-red-200' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}
+                        title={user.isActive ? 'Vô hiệu hóa' : 'Khôi phục'}
+                        disabled={loading}
                       >
-                        {user.isActive ? 'Tắt' : 'Bật'}
+                        {user.isActive ? 'Vô hiệu hóa' : 'Khôi phục'}
                       </button>
-                      <MoreVertical className="w-4 h-4 text-gray-400" />
                     </div>
                   </td>
                 </tr>
@@ -233,12 +244,27 @@ const UserManagement = () => {
 
         {/* Pagination (compact) */}
         <div className="bg-gray-50 px-4 py-2 border-t border-gray-100 flex items-center justify-between text-sm">
-          <div className="text-gray-600">Hiển thị <span className="font-medium text-gray-900">{filteredUsers.length}</span> / <span className="font-medium">{users.length}</span></div>
+          <div className="text-gray-600">
+            Hiển thị <span className="font-medium text-gray-900">{filteredUsers.length}</span> / <span className="font-medium">{totalElements}</span>
+          </div>
           <div className="flex items-center gap-2">
-            <button className="px-2 py-1 text-sm border border-gray-200 rounded hover:bg-gray-100">Trước</button>
-            <button className="px-2 py-1 text-sm bg-blue-600 text-white rounded">1</button>
-            <button className="px-2 py-1 text-sm border border-gray-200 rounded hover:bg-gray-100">2</button>
-            <button className="px-2 py-1 text-sm border border-gray-200 rounded hover:bg-gray-100">Tiếp</button>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+              disabled={currentPage === 0 || loading}
+              className="px-2 py-1 text-sm border border-gray-200 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Trước
+            </button>
+            <span className="px-3 py-1 text-sm">
+              Trang {currentPage + 1} / {totalPages || 1}
+            </span>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+              disabled={currentPage >= totalPages - 1 || loading}
+              className="px-2 py-1 text-sm border border-gray-200 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Tiếp
+            </button>
           </div>
         </div>
       </div>

@@ -26,12 +26,11 @@ export default function EditPostModal({ isOpen, onClose, post, onSave }) {
       setTags(post.tags || []);
       
       // Store original media with metadata
-      const BASE_UPLOAD_URL = "http://localhost:8088/api/v1/uploads/forum/";
       const existingImages = (post.media || [])
         .filter(m => m.mediaType === 'image' && m.url)
         .map(media => ({
-          url: BASE_UPLOAD_URL + media.url,
-          preview: BASE_UPLOAD_URL + media.url,
+          url: media.url,
+          preview: media.url,
           isExisting: true,
           mediaId: media.id
         }));
@@ -39,7 +38,7 @@ export default function EditPostModal({ isOpen, onClose, post, onSave }) {
       const existingFiles = (post.media || [])
         .filter(m => m.mediaType === 'file' && m.url)
         .map(media => ({
-          url: BASE_UPLOAD_URL + media.url,
+          url: media.url,
           name: media.fileName,
           size: formatFileSize(media.fileSize),
           isExisting: true,
@@ -135,7 +134,7 @@ export default function EditPostModal({ isOpen, onClose, post, onSave }) {
       // Find removed files (we need to track original files)
       const originalFiles = (post.media || [])
         .filter(m => m.mediaType === 'file' && m.url)
-        .map(m => ({ mediaId: m.id, url: "http://localhost:8088/api/v1/uploads/forum/" + m.url }));
+        .map(m => ({ mediaId: m.id, url: m.url }));
       
       const removedFiles = originalFiles.filter(
         orig => !files.find(f => f.url === orig.url)

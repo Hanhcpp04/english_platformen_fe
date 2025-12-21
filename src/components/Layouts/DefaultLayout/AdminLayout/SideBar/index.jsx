@@ -13,7 +13,8 @@ import {
   GraduationCap,
   Layers,
   MessageSquare,
-  PenTool
+  PenTool,
+  FileSpreadsheet
 } from 'lucide-react';
 
 const AdminSidebar = ({ isOpen, setIsOpen }) => {
@@ -47,6 +48,11 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
       path: '/admin/grammar',
     },
     {
+      title: 'Bài học Ngữ pháp',
+      icon: FileText,
+      path: '/admin/grammar-lessons',
+    },
+    {
       title: 'Quản lý Viết',
       icon: PenTool,
       path: '/admin/writing',
@@ -55,6 +61,11 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
       title: 'Quản lý Forum',
       icon: MessageSquare,
       path: '/admin/forum',
+    },
+    {
+      title: 'Báo Cáo',
+      icon: FileSpreadsheet,
+      path: '/admin/reports',
     },
     {
       title: 'Cài đặt',

@@ -62,6 +62,27 @@ export const getPromptsByTaskId = async (taskId, userId) => {
   }
 };
 
+/**
+ * Submit writing for AI grading
+ * POST /writing/submit?userId={userId}
+ * Request body: { taskId, content, mode, timeSpent }
+ * Response: {
+ *   promptId, grammarScore, vocabularyScore, coherenceScore, overallScore,
+ *   aiFeedback, grammarSuggestions, vocabularySuggestions
+ * }
+ */
+export const submitWriting = async (userId, writingData) => {
+  try {
+    const response = await request.post("/writing/submit", writingData, {
+      params: { userId }
+    });
+    return response.data.result;
+  } catch (error) {
+    console.error("Error submitting writing:", error);
+    throw error;
+  }
+};
+
 // ==================== HELPER FUNCTIONS ====================
 
 /**

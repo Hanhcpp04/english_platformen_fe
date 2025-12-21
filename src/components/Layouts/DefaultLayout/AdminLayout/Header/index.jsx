@@ -1,9 +1,30 @@
 import React from 'react';
 import { Menu, Bell, Search, LogOut, User, Settings } from 'lucide-react';
+import { getProfile } from '../../../../../service/authService';
+import { useNavigate } from 'react-router-dom';
+import { logout } from '../../../../../service/authService';
+import { toast } from 'react-toastify';
 
 const AdminHeader = ({ toggleSidebar }) => {
   const [showUserMenu, setShowUserMenu] = React.useState(false);
   const [showNotifications, setShowNotifications] = React.useState(false);
+  const [userProfile, setUserProfile] = React.useState(null);
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await getProfile();
+        if (response.code === 1000 && response.result) {
+          setUserProfile(response.result);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const notifications = [
     { id: 1, text: 'New user registered', time: '5 minutes ago', unread: true },
@@ -12,6 +33,16 @@ const AdminHeader = ({ toggleSidebar }) => {
   ];
 
   const unreadCount = notifications.filter(n => n.unread).length;
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const getInitials = (name) => {
+    if (!name) return 'A';
+    return name.charAt(0).toUpperCase();
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
@@ -83,7 +114,7 @@ const AdminHeader = ({ toggleSidebar }) => {
           )}
         </div>
 
-        {/* User Menu */}
+        {/* User Profile Menu */}
         <div className="relative">
           <button
             onClick={() => {
@@ -92,12 +123,24 @@ const AdminHeader = ({ toggleSidebar }) => {
             }}
             className="flex items-center gap-3 hover:bg-gray-100 rounded-lg px-3 py-2 transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
-              A
-            </div>
+            {userProfile?.avatar ? (
+              <img 
+                src={userProfile.avatar} 
+                alt={userProfile.username}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                {getInitials(userProfile?.username || userProfile?.fullname)}
+              </div>
+            )}
             <div className="hidden md:block text-left">
-              <p className="text-sm font-medium text-gray-900">Admin User</p>
-              <p className="text-xs text-gray-500">Administrator</p>
+              <p className="text-sm font-medium text-gray-900">
+                {userProfile?.username || 'Admin User'}
+              </p>
+              <p className="text-xs text-gray-500">
+                {userProfile?.role || 'Administrator'}
+              </p>
             </div>
           </button>
 
@@ -105,8 +148,12 @@ const AdminHeader = ({ toggleSidebar }) => {
           {showUserMenu && (
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
               <div className="px-4 py-3 border-b border-gray-100">
-                <p className="text-sm font-medium text-gray-900">Admin User</p>
-                <p className="text-xs text-gray-500">admin@englishsmart.com</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {userProfile?.fullname || userProfile?.username || 'Admin User'}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {userProfile?.email || 'admin@englishsmart.com'}
+                </p>
               </div>
               
               <div className="py-1">
@@ -121,7 +168,10 @@ const AdminHeader = ({ toggleSidebar }) => {
               </div>
 
               <div className="border-t border-gray-100 py-1">
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
                   <LogOut className="w-4 h-4" />
                   <span>Logout</span>
                 </button>

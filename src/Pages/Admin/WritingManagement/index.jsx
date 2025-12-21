@@ -1,492 +1,688 @@
 import React, { useState, useEffect } from 'react';
 import { 
+  Plus, 
+  Edit2, 
+  Trash2, 
   Search,
-  Eye,
-  CheckCircle,
-  XCircle,
-  Clock,
+  BookOpen,
+  X,
+  Save,
+  ArrowLeft,
+  RefreshCw,
   FileText,
-  MessageSquare,
-  Star,
-  Filter,
-  Download,
-  User
+  Eye,
+  Settings,
+  AlertCircle
 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import * as adminService from '../../../service/adminService';
 
 const WritingManagement = () => {
-  const [submissions, setSubmissions] = useState([]);
-  const [filteredSubmissions, setFilteredSubmissions] = useState([]);
+  const [topics, setTopics] = useState([]);
+  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showGradingModal, setShowGradingModal] = useState(false);
+  const [modalMode, setModalMode] = useState('add');
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [pageSize] = useState(10);
+  const [viewQuestion, setViewQuestion] = useState(null);
+  
+  const [formData, setFormData] = useState({
+    topicId: '',
+    question: '',
+    writingTips: '',
+    xpReward: 50,
+    isActive: true
+  });
+
+  const [gradingData, setGradingData] = useState({
+    grammarWeight: 30,
+    vocabularyWeight: 30,
+    coherenceWeight: 40,
+    minWordCount: 100,
+    maxWordCount: 500,
+    customInstructions: ''
+  });
 
   useEffect(() => {
-    fetchSubmissions();
+    fetchTopics();
   }, []);
 
   useEffect(() => {
-    filterSubmissions();
-  }, [searchQuery, statusFilter, submissions]);
+    if (selectedTopic) {
+      fetchTasks();
+    }
+  }, [selectedTopic, currentPage]);
 
-  const fetchSubmissions = async () => {
+  const fetchTopics = async () => {
     try {
       setLoading(true);
-      // Mock data - Replace with actual API call
-      setTimeout(() => {
-        const mockSubmissions = [
-          {
-            id: 1,
-            userId: 1,
-            username: 'johndoe',
-            userFullname: 'John Doe',
-            taskTitle: 'Argumentative Essay',
-            taskType: 'Essay',
-            content: 'In today\'s digital age, technology has become an integral part of our lives...',
-            wordCount: 350,
-            status: 'pending',
-            score: null,
-            feedback: null,
-            submittedAt: '2024-11-20T10:30:00',
-            reviewedAt: null,
-            reviewedBy: null
-          },
-          {
-            id: 2,
-            userId: 2,
-            username: 'janesmith',
-            userFullname: 'Jane Smith',
-            taskTitle: 'Descriptive Writing',
-            taskType: 'Paragraph',
-            content: 'The old library stood at the corner of Main Street, its weathered brick walls...',
-            wordCount: 180,
-            status: 'reviewed',
-            score: 8.5,
-            feedback: 'Good use of descriptive language. Consider varying sentence structure more.',
-            submittedAt: '2024-11-19T14:20:00',
-            reviewedAt: '2024-11-20T09:15:00',
-            reviewedBy: 'Teacher Admin'
-          },
-          {
-            id: 3,
-            userId: 3,
-            username: 'mikejohnson',
-            userFullname: 'Mike Johnson',
-            taskTitle: 'Opinion Essay',
-            taskType: 'Essay',
-            content: 'Social media has revolutionized the way we communicate...',
-            wordCount: 420,
-            status: 'reviewed',
-            score: 7.0,
-            feedback: 'Clear arguments but needs more supporting evidence. Good structure overall.',
-            submittedAt: '2024-11-18T16:45:00',
-            reviewedAt: '2024-11-19T11:30:00',
-            reviewedBy: 'Teacher Admin'
-          },
-          {
-            id: 4,
-            userId: 4,
-            username: 'sarahwilson',
-            userFullname: 'Sarah Wilson',
-            taskTitle: 'Narrative Writing',
-            taskType: 'Story',
-            content: 'It was a dark and stormy night when everything changed...',
-            wordCount: 280,
-            status: 'pending',
-            score: null,
-            feedback: null,
-            submittedAt: '2024-11-20T08:15:00',
-            reviewedAt: null,
-            reviewedBy: null
-          },
-          {
-            id: 5,
-            userId: 5,
-            username: 'tombrown',
-            userFullname: 'Tom Brown',
-            taskTitle: 'Compare and Contrast',
-            taskType: 'Essay',
-            content: 'While both methods have their merits, there are distinct differences...',
-            wordCount: 390,
-            status: 'pending',
-            score: null,
-            feedback: null,
-            submittedAt: '2024-11-20T11:00:00',
-            reviewedAt: null,
-            reviewedBy: null
-          }
-        ];
-        setSubmissions(mockSubmissions);
-        setFilteredSubmissions(mockSubmissions);
-        setLoading(false);
-      }, 1000);
+      const response = await adminService.getAllWritingTopics(0, 100);
+      if (response.code === 1000 && response.result) {
+        setTopics(response.result.content || []);
+      }
     } catch (error) {
-      console.error('Error fetching submissions:', error);
+      console.error('Error fetching topics:', error);
+      toast.error('Không thể tải danh sách chủ đề');
+    } finally {
       setLoading(false);
     }
   };
 
-  const filterSubmissions = () => {
-    let filtered = submissions;
-
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(s => s.status === statusFilter);
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getTasksByTopic(selectedTopic.id, currentPage, pageSize);
+      if (response.code === 1000 && response.result) {
+        setTasks(response.result.content || []);
+        setTotalPages(response.result.totalPages || 0);
+        setTotalElements(response.result.totalElements || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      toast.error('Không thể tải danh sách bài tập');
+    } finally {
+      setLoading(false);
     }
-
-    if (searchQuery) {
-      filtered = filtered.filter(s =>
-        s.userFullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.taskTitle.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    setFilteredSubmissions(filtered);
   };
 
-  const handleViewDetails = (submission) => {
-    setSelectedSubmission(submission);
-    setShowDetailModal(true);
-  };
-
-  const handleReview = (submissionId, score, feedback) => {
-    setSubmissions(submissions.map(s =>
-      s.id === submissionId
-        ? {
-            ...s,
-            status: 'reviewed',
-            score,
-            feedback,
-            reviewedAt: new Date().toISOString(),
-            reviewedBy: 'Current Admin'
-          }
-        : s
-    ));
-    setShowDetailModal(false);
-  };
-
-  const stats = [
-    {
-      label: 'Tổng bài nộp',
-      value: submissions.length,
-      icon: FileText,
-      color: 'blue'
-    },
-    {
-      label: 'Chờ chấm',
-      value: submissions.filter(s => s.status === 'pending').length,
-      icon: Clock,
-      color: 'yellow'
-    },
-    {
-      label: 'Đã chấm',
-      value: submissions.filter(s => s.status === 'reviewed').length,
-      icon: CheckCircle,
-      color: 'green'
-    },
-    {
-      label: 'Điểm TB',
-      value: (submissions
-        .filter(s => s.score)
-        .reduce((sum, s) => sum + s.score, 0) /
-        submissions.filter(s => s.score).length || 0).toFixed(1),
-      icon: Star,
-      color: 'purple'
+  const handleCreateTask = async () => {
+    if (!formData.question) {
+      toast.error('Vui lòng nhập câu hỏi');
+      return;
     }
-  ];
+    
+    try {
+      const taskData = {
+        ...formData,
+        topicId: selectedTopic.id
+      };
+      const response = await adminService.createWritingTask(taskData);
+      if (response.code === 1000) {
+        toast.success('Tạo bài tập thành công');
+        setShowModal(false);
+        resetForm();
+        fetchTasks();
+        fetchTopics();
+      }
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast.error('Không thể tạo bài tập');
+    }
+  };
 
-  const DetailModal = () => {
-    const [reviewScore, setReviewScore] = useState(selectedSubmission?.score || '');
-    const [reviewFeedback, setReviewFeedback] = useState(selectedSubmission?.feedback || '');
+  const handleUpdateTask = async () => {
+    try {
+      const response = await adminService.updateWritingTask(selectedTask.id, formData);
+      if (response.code === 1000) {
+        toast.success('Cập nhật bài tập thành công');
+        setShowModal(false);
+        resetForm();
+        fetchTasks();
+      }
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast.error('Không thể cập nhật bài tập');
+    }
+  };
 
+  const handleDeleteRestore = async (taskId, isActive) => {
+    const status = isActive ? 'delete' : 'restore';
+    const confirmMsg = isActive ? 'Bạn có chắc muốn xóa bài tập này?' : 'Bạn có chắc muốn khôi phục bài tập này?';
+    
+    if (!window.confirm(confirmMsg)) return;
+    
+    try {
+      const response = await adminService.deleteOrRestoreWritingTask(taskId, status);
+      if (response.code === 1000) {
+        toast.success(isActive ? 'Đã xóa bài tập' : 'Đã khôi phục bài tập');
+        fetchTasks();
+      }
+    } catch (error) {
+      console.error('Error deleting/restoring task:', error);
+      toast.error('Không thể thực hiện thao tác');
+    }
+  };
+
+  const handleUpdateGradingCriteria = async () => {
+    const totalWeight = gradingData.grammarWeight + gradingData.vocabularyWeight + gradingData.coherenceWeight;
+    if (totalWeight !== 100) {
+      toast.error(`Tổng tỷ trọng phải = 100%. Hiện tại: ${totalWeight}%`);
+      return;
+    }
+
+    try {
+      const response = await adminService.updateGradingCriteria(selectedTask.id, gradingData);
+      if (response.code === 1000) {
+        toast.success('Cập nhật tiêu chí chấm điểm thành công');
+        setShowGradingModal(false);
+        fetchTasks();
+      }
+    } catch (error) {
+      console.error('Error updating grading criteria:', error);
+      toast.error(error.message || 'Không thể cập nhật tiêu chí chấm điểm');
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      topicId: selectedTopic?.id || '',
+      question: '',
+      writingTips: '',
+      xpReward: 50,
+      isActive: true
+    });
+    setSelectedTask(null);
+  };
+
+  const openAddModal = () => {
+    resetForm();
+    setModalMode('add');
+    setShowModal(true);
+  };
+
+  const openEditModal = (task) => {
+    setSelectedTask(task);
+    setFormData({
+      topicId: task.topicId,
+      question: task.question,
+      writingTips: task.writingTips || '',
+      xpReward: task.xpReward || 50,
+      isActive: task.isActive
+    });
+    setModalMode('edit');
+    setShowModal(true);
+  };
+
+  const openGradingModal = (task) => {
+    setSelectedTask(task);
+    if (task.gradingCriteria) {
+      setGradingData({
+        grammarWeight: task.gradingCriteria.grammarWeight || 30,
+        vocabularyWeight: task.gradingCriteria.vocabularyWeight || 30,
+        coherenceWeight: task.gradingCriteria.coherenceWeight || 40,
+        minWordCount: task.gradingCriteria.minWordCount || 100,
+        maxWordCount: task.gradingCriteria.maxWordCount || 500,
+        customInstructions: task.gradingCriteria.customInstructions || ''
+      });
+    } else {
+      setGradingData({
+        grammarWeight: 30,
+        vocabularyWeight: 30,
+        coherenceWeight: 40,
+        minWordCount: 100,
+        maxWordCount: 500,
+        customInstructions: ''
+      });
+    }
+    setShowGradingModal(true);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (modalMode === 'add') {
+      handleCreateTask();
+    } else {
+      handleUpdateTask();
+    }
+  };
+
+  const filteredTasks = tasks.filter((task) =>
+    task.question?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    task.writingTips?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Topic selection view
+  if (!selectedTopic) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">Chi tiết bài nộp</h2>
-            <button
-              onClick={() => setShowDetailModal(false)}
-              className="p-2 hover:bg-gray-100 rounded"
-            >
-              <XCircle className="w-5 h-5 text-gray-500" />
-            </button>
+      <div className="p-6 space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Quản lý Bài viết (Writing)</h1>
+            <p className="text-sm text-gray-500 mt-1">Chọn chủ đề để quản lý bài tập</p>
           </div>
-
-          <div className="p-6 space-y-6">
-            {/* Submission Info */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-xs text-gray-500 mb-1">Học viên</div>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
-                    {selectedSubmission?.userFullname.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{selectedSubmission?.userFullname}</div>
-                    <div className="text-xs text-gray-500">@{selectedSubmission?.username}</div>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500 mb-1">Bài tập</div>
-                <div className="text-sm font-medium text-gray-900">{selectedSubmission?.taskTitle}</div>
-                <div className="text-xs text-gray-500">{selectedSubmission?.taskType}</div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500 mb-1">Thời gian nộp</div>
-                <div className="text-sm text-gray-900">
-                  {new Date(selectedSubmission?.submittedAt).toLocaleString('vi-VN')}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500 mb-1">Số từ</div>
-                <div className="text-sm font-medium text-gray-900">{selectedSubmission?.wordCount} từ</div>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">Nội dung bài viết:</div>
-              <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-900 leading-relaxed">
-                {selectedSubmission?.content}
-              </div>
-            </div>
-
-            {/* Review Section */}
-            <div className="border-t border-gray-200 pt-6">
-              <div className="text-sm font-medium text-gray-700 mb-4">
-                {selectedSubmission?.status === 'reviewed' ? 'Kết quả chấm' : 'Chấm điểm'}
-              </div>
-              
-              {selectedSubmission?.status === 'reviewed' ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                    <Star className="w-5 h-5 text-yellow-500" />
-                    <div>
-                      <div className="text-xs text-gray-600">Điểm số</div>
-                      <div className="text-lg font-semibold text-gray-900">{selectedSubmission.score}/10</div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-600 mb-1">Nhận xét</div>
-                    <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-900">
-                      {selectedSubmission.feedback}
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Chấm bởi {selectedSubmission.reviewedBy} lúc {new Date(selectedSubmission.reviewedAt).toLocaleString('vi-VN')}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm text-gray-700 mb-1">Điểm số (0-10)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="10"
-                      step="0.5"
-                      value={reviewScore}
-                      onChange={(e) => setReviewScore(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
-                      placeholder="Nhập điểm..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-700 mb-1">Nhận xét</label>
-                    <textarea
-                      value={reviewFeedback}
-                      onChange={(e) => setReviewFeedback(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
-                      placeholder="Nhập nhận xét chi tiết..."
-                      rows={4}
-                    />
-                  </div>
-                  <button
-                    onClick={() => handleReview(selectedSubmission.id, parseFloat(reviewScore), reviewFeedback)}
-                    disabled={!reviewScore || !reviewFeedback}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Hoàn thành chấm điểm
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+          <button
+            onClick={fetchTopics}
+            disabled={loading}
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Làm mới
+          </button>
         </div>
-      </div>
-    );
-  };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-56">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-          <p className="text-sm text-gray-600">Đang tải...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {topics.filter(t => t.isActive).map((topic) => (
+            <div
+              key={topic.id}
+              onClick={() => setSelectedTopic(topic)}
+              className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-purple-50 rounded-lg">
+                  <BookOpen className="w-6 h-6 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900">{topic.name}</h3>
+                  <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <FileText className="w-3 h-3" />
+                      {topic.totalTasks || 0} bài tập
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
   }
 
+  // Task management view
   return (
-    <div className="space-y-4">
-      {/* Header + Toolbar */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Quản lý Writing</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Chấm điểm và quản lý bài viết</p>
+    <div className="p-6 space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              setSelectedTopic(null);
+              setCurrentPage(0);
+            }}
+            className="p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{selectedTopic.name}</h1>
+            <p className="text-sm text-gray-500">{totalElements} bài tập</p>
+          </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Tìm học viên hoặc bài tập..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md w-64 focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="all">Tất cả</option>
-              <option value="pending">Chờ chấm</option>
-              <option value="reviewed">Đã chấm</option>
-            </select>
-          </div>
-
-          <button className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-md hover:bg-gray-50">
-            <Download className="w-4 h-4" />
-            Xuất
+        <div className="flex gap-2">
+          <button
+            onClick={fetchTasks}
+            disabled={loading}
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Làm mới
+          </button>
+          <button
+            onClick={openAddModal}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Thêm bài tập
           </button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="flex flex-wrap gap-3">
-        {stats.map((stat, index) => (
-          <div key={index} className="flex items-center gap-3 bg-white border border-gray-200 rounded-md px-3 py-2 min-w-[160px]">
-            <div className={`p-2 rounded-md bg-${stat.color}-50`}>
-              <stat.icon className={`w-5 h-5 text-${stat.color}-600`} />
-            </div>
-            <div>
-              <div className="text-xs text-gray-500">{stat.label}</div>
-              <div className="text-sm font-semibold text-gray-900">{stat.value}</div>
-            </div>
-          </div>
-        ))}
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Tìm kiếm bài tập..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+        />
       </div>
 
-      {/* Submissions Table */}
-      <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Học viên</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Bài tập</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Số từ</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Trạng thái</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Điểm</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Thời gian</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Hành động</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredSubmissions.map((submission) => (
-                <tr key={submission.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium">
-                        {submission.userFullname.charAt(0)}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate">{submission.userFullname}</div>
-                        <div className="text-xs text-gray-500">@{submission.username}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="text-sm text-gray-900">{submission.taskTitle}</div>
-                    <div className="text-xs text-gray-500">{submission.taskType}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-sm text-gray-900">{submission.wordCount}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
-                      submission.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {submission.status === 'pending' ? (
-                        <><Clock className="w-3 h-3" /> Chờ chấm</>
-                      ) : (
-                        <><CheckCircle className="w-3 h-3" /> Đã chấm</>
-                      )}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {submission.score ? (
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-yellow-500" />
-                        <span className="text-sm font-medium text-gray-900">{submission.score}/10</span>
-                      </div>
+      {/* Tasks Table */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Câu hỏi</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">XP</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Bài nộp</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Tiêu chí</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Trạng thái</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">Hành động</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {filteredTasks.map((task) => (
+              <tr key={task.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => setViewQuestion(task)}
+                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-left"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span className="line-clamp-2">{task.question}</span>
+                  </button>
+                </td>
+                <td className="px-6 py-4 text-sm">{task.xpReward} XP</td>
+                <td className="px-6 py-4 text-sm">{task.totalSubmissions || 0}</td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => openGradingModal(task)}
+                    className="text-purple-600 hover:text-purple-800 flex items-center gap-1"
+                  >
+                    <Settings className="w-4 h-4" />
+                    {task.gradingCriteria ? (
+                      <span className="text-xs">
+                        G:{task.gradingCriteria.grammarWeight}% 
+                        V:{task.gradingCriteria.vocabularyWeight}% 
+                        C:{task.gradingCriteria.coherenceWeight}%
+                      </span>
                     ) : (
-                      <span className="text-xs text-gray-400">Chưa chấm</span>
+                      <span className="text-xs">Chỉnh sửa</span>
                     )}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-gray-500">
-                    {new Date(submission.submittedAt).toLocaleDateString('vi-VN')}
-                  </td>
-                  <td className="px-4 py-3">
+                  </button>
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    task.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {task.isActive ? 'Hoạt động' : 'Đã xóa'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <div className="flex justify-end gap-2">
                     <button
-                      onClick={() => handleViewDetails(submission)}
-                      className="flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded"
+                      onClick={() => openEditModal(task)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                      title="Sửa"
                     >
-                      <Eye className="w-4 h-4" />
-                      {submission.status === 'pending' ? 'Chấm điểm' : 'Xem'}
+                      <Edit2 className="w-4 h-4" />
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    <button
+                      onClick={() => handleDeleteRestore(task.id, task.isActive)}
+                      className={`p-2 rounded ${
+                        task.isActive 
+                          ? 'text-red-600 hover:bg-red-50' 
+                          : 'text-green-600 hover:bg-green-50'
+                      }`}
+                      title={task.isActive ? 'Xóa' : 'Khôi phục'}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
         {/* Pagination */}
-        <div className="bg-gray-50 px-4 py-2 border-t border-gray-100 flex items-center justify-between text-sm">
-          <div className="text-gray-600">
-            Hiển thị <span className="font-medium text-gray-900">{filteredSubmissions.length}</span> / <span className="font-medium">{submissions.length}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="px-2 py-1 text-sm border border-gray-200 rounded hover:bg-gray-100">Trước</button>
-            <button className="px-2 py-1 text-sm bg-blue-600 text-white rounded">1</button>
-            <button className="px-2 py-1 text-sm border border-gray-200 rounded hover:bg-gray-100">Tiếp</button>
+        <div className="bg-gray-50 px-6 py-3 border-t flex justify-between items-center">
+          <span className="text-sm text-gray-600">
+            Hiển thị {filteredTasks.length} / {totalElements}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+              disabled={currentPage === 0 || loading}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Trước
+            </button>
+            <span className="px-3 py-1">Trang {currentPage + 1} / {totalPages || 1}</span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={currentPage >= totalPages - 1 || loading}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Sau
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Empty State */}
-      {filteredSubmissions.length === 0 && (
-        <div className="bg-white rounded-lg border border-gray-100 p-8 text-center">
-          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-gray-900 mb-1">Không tìm thấy bài nộp</h3>
-          <p className="text-sm text-gray-600">Thử điều chỉnh bộ lọc hoặc tìm kiếm</p>
+      {/* Modal Add/Edit Task */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="border-b px-4 py-3 flex justify-between items-center sticky top-0 bg-white">
+              <h2 className="text-lg font-semibold">
+                {modalMode === 'add' ? 'Thêm bài tập mới' : 'Chỉnh sửa bài tập'}
+              </h2>
+              <button onClick={() => setShowModal(false)}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Câu hỏi *</label>
+                <textarea
+                  value={formData.question}
+                  onChange={(e) => setFormData({ ...formData, question: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                  rows={5}
+                  placeholder="Nhập câu hỏi cho bài viết..."
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Gợi ý viết</label>
+                <textarea
+                  value={formData.writingTips}
+                  onChange={(e) => setFormData({ ...formData, writingTips: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                  rows={4}
+                  placeholder="Nhập gợi ý để học viên viết tốt hơn..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">XP thưởng</label>
+                <input
+                  type="number"
+                  value={formData.xpReward}
+                  onChange={(e) => setFormData({ ...formData, xpReward: parseInt(e.target.value) || 50 })}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                  min="1"
+                />
+              </div>
+
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                Kích hoạt
+              </label>
+
+              <div className="flex justify-end gap-2 pt-2 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 border rounded-lg"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {modalMode === 'add' ? 'Thêm' : 'Lưu'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
-      {showDetailModal && selectedSubmission && <DetailModal />}
+      {/* Modal Grading Criteria */}
+      {showGradingModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="border-b px-4 py-3 flex justify-between items-center sticky top-0 bg-white">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                Tiêu chí chấm điểm
+              </h2>
+              <button onClick={() => setShowGradingModal(false)}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <strong>Lưu ý:</strong> Tổng tỷ trọng của Grammar + Vocabulary + Coherence phải = 100%
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Grammar (%)</label>
+                  <input
+                    type="number"
+                    value={gradingData.grammarWeight}
+                    onChange={(e) => setGradingData({ ...gradingData, grammarWeight: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                    min="0"
+                    max="100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Vocabulary (%)</label>
+                  <input
+                    type="number"
+                    value={gradingData.vocabularyWeight}
+                    onChange={(e) => setGradingData({ ...gradingData, vocabularyWeight: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                    min="0"
+                    max="100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Coherence (%)</label>
+                  <input
+                    type="number"
+                    value={gradingData.coherenceWeight}
+                    onChange={(e) => setGradingData({ ...gradingData, coherenceWeight: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                    min="0"
+                    max="100"
+                  />
+                </div>
+              </div>
+
+              <div className="text-sm text-center">
+                Tổng: <strong className={`text-lg ${
+                  (gradingData.grammarWeight + gradingData.vocabularyWeight + gradingData.coherenceWeight) === 100
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                }`}>
+                  {gradingData.grammarWeight + gradingData.vocabularyWeight + gradingData.coherenceWeight}%
+                </strong>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Số từ tối thiểu</label>
+                  <input
+                    type="number"
+                    value={gradingData.minWordCount}
+                    onChange={(e) => setGradingData({ ...gradingData, minWordCount: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Số từ tối đa</label>
+                  <input
+                    type="number"
+                    value={gradingData.maxWordCount}
+                    onChange={(e) => setGradingData({ ...gradingData, maxWordCount: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Hướng dẫn chấm điểm cho AI</label>
+                <textarea
+                  value={gradingData.customInstructions}
+                  onChange={(e) => setGradingData({ ...gradingData, customInstructions: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                  rows={4}
+                  placeholder="Nhập hướng dẫn đặc biệt cho AI khi chấm bài..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t">
+                <button
+                  onClick={() => setShowGradingModal(false)}
+                  className="px-4 py-2 border rounded-lg"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleUpdateGradingCriteria}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  Lưu tiêu chí
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal View Question */}
+      {viewQuestion && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="border-b px-4 py-3 flex justify-between items-center sticky top-0 bg-white">
+              <h2 className="text-lg font-semibold">Chi tiết câu hỏi</h2>
+              <button onClick={() => setViewQuestion(null)}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Câu hỏi:</h3>
+                <p className="text-gray-900 whitespace-pre-wrap">{viewQuestion.question}</p>
+              </div>
+              {viewQuestion.writingTips && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">Gợi ý viết:</h3>
+                  <p className="text-gray-700 whitespace-pre-wrap">{viewQuestion.writingTips}</p>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                <div>
+                  <span className="text-sm text-gray-500">XP thưởng:</span>
+                  <p className="font-medium">{viewQuestion.xpReward} XP</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Số bài nộp:</span>
+                  <p className="font-medium">{viewQuestion.totalSubmissions || 0}</p>
+                </div>
+              </div>
+            </div>
+            <div className="border-t px-4 py-3 flex justify-end sticky bottom-0 bg-white">
+              <button
+                onClick={() => setViewQuestion(null)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

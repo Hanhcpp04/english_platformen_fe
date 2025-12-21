@@ -10,11 +10,13 @@ import {
   X,
   Save,
   FileText,
-  List,
   Target,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  RefreshCw
 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import * as adminService from '../../../service/adminService';
 
 const GrammarManagement = () => {
   const [topics, setTopics] = useState([]);
@@ -25,15 +27,20 @@ const GrammarManagement = () => {
   const [modalMode, setModalMode] = useState('add');
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [expandedTopics, setExpandedTopics] = useState({});
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [pageSize] = useState(10);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    is_active: true
+    isActive: true,
+    xpReward: 100
   });
 
   useEffect(() => {
     fetchTopics();
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
     filterTopics();
@@ -42,63 +49,17 @@ const GrammarManagement = () => {
   const fetchTopics = async () => {
     try {
       setLoading(true);
-      // Mock data - Replace with actual API call
-      setTimeout(() => {
-        const mockTopics = [
-          {
-            id: 1,
-            name: 'Present Tenses',
-            description: 'Các thì hiện tại trong tiếng Anh',
-            is_active: true,
-            total_lessons: 5,
-            total_exercises: 15,
-            created_at: '2024-01-15T10:00:00',
-            lessons: [
-              { id: 1, title: 'Present Simple', order: 1 },
-              { id: 2, title: 'Present Continuous', order: 2 },
-              { id: 3, title: 'Present Perfect', order: 3 }
-            ]
-          },
-          {
-            id: 2,
-            name: 'Past Tenses',
-            description: 'Các thì quá khứ trong tiếng Anh',
-            is_active: true,
-            total_lessons: 4,
-            total_exercises: 12,
-            created_at: '2024-01-20T14:30:00',
-            lessons: [
-              { id: 4, title: 'Past Simple', order: 1 },
-              { id: 5, title: 'Past Continuous', order: 2 }
-            ]
-          },
-          {
-            id: 3,
-            name: 'Conditionals',
-            description: 'Câu điều kiện',
-            is_active: true,
-            total_lessons: 4,
-            total_exercises: 10,
-            created_at: '2024-02-01T09:15:00',
-            lessons: []
-          },
-          {
-            id: 4,
-            name: 'Modal Verbs',
-            description: 'Động từ khuyết thiếu',
-            is_active: false,
-            total_lessons: 3,
-            total_exercises: 8,
-            created_at: '2024-02-10T11:20:00',
-            lessons: []
-          }
-        ];
-        setTopics(mockTopics);
-        setFilteredTopics(mockTopics);
-        setLoading(false);
-      }, 1000);
+      const response = await adminService.getAllGrammarTopics(currentPage, pageSize);
+      if (response.code === 1000 && response.result) {
+        setTopics(response.result.content || []);
+        setFilteredTopics(response.result.content || []);
+        setTotalPages(response.result.totalPages || 0);
+        setTotalElements(response.result.totalElements || 0);
+      }
     } catch (error) {
       console.error('Error fetching topics:', error);
+      toast.error('Không thể tải danh sách chủ đề');
+    } finally {
       setLoading(false);
     }
   };
@@ -127,7 +88,8 @@ const GrammarManagement = () => {
     setFormData({
       name: '',
       description: '',
-      is_active: true
+      isActive: true,
+      xpReward: 100
     });
     setShowModal(true);
   };
@@ -138,53 +100,73 @@ const GrammarManagement = () => {
     setFormData({
       name: topic.name,
       description: topic.description,
-      is_active: topic.is_active
+      isActive: topic.isActive,
+      xpReward: topic.xpReward
     });
     setShowModal(true);
   };
 
-  const handleDeleteTopic = async (topicId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa chủ đề này? Tất cả bài học và bài tập liên quan sẽ bị xóa.')) {
-      try {
-        console.log('Deleting topic:', topicId);
-        setTopics(topics.filter(t => t.id !== topicId));
-      } catch (error) {
-        console.error('Error deleting topic:', error);
+  const handleDeleteTopic = async (topicId, isActive) => {
+    const status = isActive ? 'delete' : 'restore';
+    const confirmMsg = isActive 
+      ? 'Bạn có chắc muốn xóa chủ đề này?' 
+      : 'Bạn có chắc muốn khôi phục chủ đề này?';
+    
+    if (!window.confirm(confirmMsg)) return;
+    
+    try {
+      const response = await adminService.deleteOrRestoreGrammarTopic(topicId, status);
+      if (response.code === 1000) {
+        toast.success(isActive ? 'Đã xóa chủ đề' : 'Đã khôi phục chủ đề');
+        fetchTopics();
       }
+    } catch (error) {
+      console.error('Error deleting/restoring topic:', error);
+      toast.error('Không thể thực hiện thao tác');
     }
   };
 
-  const handleToggleActive = async (topicId) => {
+  const handleToggleActive = async (topicId, currentStatus) => {
+    const status = currentStatus ? 'delete' : 'restore';
     try {
-      setTopics(topics.map(t => 
-        t.id === topicId ? { ...t, is_active: !t.is_active } : t
-      ));
+      const response = await adminService.deleteOrRestoreGrammarTopic(topicId, status);
+      if (response.code === 1000) {
+        toast.success(currentStatus ? 'Đã tạm dừng chủ đề' : 'Đã kích hoạt chủ đề');
+        fetchTopics();
+      }
     } catch (error) {
       console.error('Error toggling active status:', error);
+      toast.error('Không thể thay đổi trạng thái');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.name) {
+      toast.error('Vui lòng nhập tên chủ đề');
+      return;
+    }
+    
     try {
       if (modalMode === 'add') {
-        const newTopic = {
-          id: topics.length + 1,
-          ...formData,
-          total_lessons: 0,
-          total_exercises: 0,
-          lessons: [],
-          created_at: new Date().toISOString()
-        };
-        setTopics([...topics, newTopic]);
+        const response = await adminService.createGrammarTopic(formData);
+        if (response.code === 1000) {
+          toast.success('Tạo chủ đề thành công');
+          setShowModal(false);
+          fetchTopics();
+        }
       } else {
-        setTopics(topics.map(t => 
-          t.id === selectedTopic.id ? { ...t, ...formData } : t
-        ));
+        const response = await adminService.updateGrammarTopic(selectedTopic.id, formData);
+        if (response.code === 1000) {
+          toast.success('Cập nhật chủ đề thành công');
+          setShowModal(false);
+          fetchTopics();
+        }
       }
-      setShowModal(false);
     } catch (error) {
       console.error('Error saving topic:', error);
+      toast.error('Không thể lưu chủ đề');
     }
   };
 
@@ -229,11 +211,22 @@ const GrammarManagement = () => {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">XP thưởng</label>
+            <input
+              type="number"
+              value={formData.xpReward}
+              onChange={(e) => setFormData({ ...formData, xpReward: parseInt(e.target.value) || 100 })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              min="1"
+            />
+          </div>
+
           <label className="inline-flex items-center gap-2 text-sm">
             <input
               type="checkbox"
-              checked={formData.is_active}
-              onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+              checked={formData.isActive}
+              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
               className="w-4 h-4"
             />
             Kích hoạt
@@ -293,6 +286,15 @@ const GrammarManagement = () => {
           </div>
 
           <button
+            onClick={fetchTopics}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Làm mới
+          </button>
+
+          <button
             onClick={handleAddTopic}
             className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
           >
@@ -323,7 +325,7 @@ const GrammarManagement = () => {
             <div>
               <div className="text-xs text-gray-500">Tổng bài học</div>
               <div className="text-xl font-semibold text-gray-900">
-                {topics.reduce((sum, t) => sum + t.total_lessons, 0)}
+                {topics.reduce((sum, t) => sum + (t.totalLessons || 0), 0)}
               </div>
             </div>
           </div>
@@ -336,7 +338,7 @@ const GrammarManagement = () => {
             <div>
               <div className="text-xs text-gray-500">Tổng bài tập</div>
               <div className="text-xl font-semibold text-gray-900">
-                {topics.reduce((sum, t) => sum + t.total_exercises, 0)}
+                {topics.reduce((sum, t) => sum + (t.totalExercises || 0), 0)}
               </div>
             </div>
           </div>
@@ -364,20 +366,24 @@ const GrammarManagement = () => {
                     <div className="flex items-center gap-2">
                       <h3 className="text-base font-semibold text-gray-900">{topic.name}</h3>
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
-                        topic.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        topic.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                       }`}>
-                        {topic.is_active ? <><CheckCircle className="w-3 h-3" /> Hoạt động</> : <><XCircle className="w-3 h-3" /> Tạm dừng</>}
+                        {topic.isActive ? <><CheckCircle className="w-3 h-3" /> Hoạt động</> : <><XCircle className="w-3 h-3" /> Tạm dừng</>}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">{topic.description}</p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                       <span className="flex items-center gap-1">
                         <FileText className="w-3 h-3" />
-                        {topic.total_lessons} bài học
+                        {topic.totalLessons || 0} bài học
                       </span>
                       <span className="flex items-center gap-1">
                         <Target className="w-3 h-3" />
-                        {topic.total_exercises} bài tập
+                        {topic.totalExercises || 0} bài tập
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="w-3 h-3" />
+                        {topic.xpReward} XP
                       </span>
                     </div>
                   </div>
@@ -385,12 +391,12 @@ const GrammarManagement = () => {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleToggleActive(topic.id)}
+                    onClick={() => handleToggleActive(topic.id, topic.isActive)}
                     className={`px-3 py-1 rounded-md text-xs ${
-                      topic.is_active ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700'
+                      topic.isActive ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700'
                     }`}
                   >
-                    {topic.is_active ? 'Tạm dừng' : 'Kích hoạt'}
+                    {topic.isActive ? 'Tạm dừng' : 'Kích hoạt'}
                   </button>
                   <button
                     onClick={() => handleEditTopic(topic)}
@@ -399,8 +405,11 @@ const GrammarManagement = () => {
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => handleDeleteTopic(topic.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-md"
+                    onClick={() => handleDeleteTopic(topic.id, topic.isActive)}
+                    className={`p-2 rounded-md ${
+                      topic.isActive ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'
+                    }`}
+                    title={topic.isActive ? 'Xóa' : 'Khôi phục'}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -457,6 +466,32 @@ const GrammarManagement = () => {
               Thêm chủ đề
             </button>
           )}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!searchTerm && totalPages > 1 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 flex justify-between items-center">
+          <span className="text-sm text-gray-600">
+            Hiển thị {filteredTopics.length} / {totalElements} chủ đề
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+              disabled={currentPage === 0 || loading}
+              className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50"
+            >
+              Trước
+            </button>
+            <span className="px-3 py-1">Trang {currentPage + 1} / {totalPages}</span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={currentPage >= totalPages - 1 || loading}
+              className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50"
+            >
+              Sau
+            </button>
+          </div>
         </div>
       )}
 

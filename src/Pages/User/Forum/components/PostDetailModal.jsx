@@ -114,7 +114,6 @@ export default function PostDetailModal({ post: initialPost, isOpen, onClose }) 
       const response = await getPostDetail(initialPost.id);
       
       if (response.code === 1000 && response.result) {
-        const BASE_UPLOAD_URL = "http://localhost:8088/api/v1/uploads/forum/";
         const postData = response.result;
         const mappedPost = {
           id: postData.id,
@@ -129,11 +128,11 @@ export default function PostDetailModal({ post: initialPost, isOpen, onClose }) 
           likes_count: postData.likesCount,
           comments_count: postData.commentsCount,
           views: postData.viewsCount,
-          images: postData.media?.filter(m => m.mediaType === 'image' && m.url).map(m => BASE_UPLOAD_URL + m.url) || [],
+          images: postData.media?.filter(m => m.mediaType === 'image' && m.url).map(m => m.url) || [],
           files: postData.media?.filter(m => m.mediaType === 'file' && m.url).map(m => ({
             name: m.fileName,
             size: formatFileSize(m.fileSize),
-            url: BASE_UPLOAD_URL + m.url,
+            url: m.url,
           })) || [],
           hasLiked: postData.isLiked,
           hasBookmarked: false,

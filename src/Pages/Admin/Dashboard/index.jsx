@@ -26,108 +26,57 @@ import {
   Legend,
   // ResponsiveContainer, // no longer used
 } from 'recharts';
+import { getAdminDashboard } from '../../../service/adminService';
 
 const AdminDashboard = () => {
-  // Dummy Data for Statistics
-  
-  const stats = [
-    {
-      title: 'Tổng người dùng',
-      value: '2,543',
-      change: '+12.5%',
-      isIncrease: true,
-      icon: Users,
-      color: 'blue',
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-blue-600',
-    },
-    {
-      title: 'Số từ vựng',
-      value: '4,892',
-      change: '+8.2%',
-      isIncrease: true,
-      icon: BookOpen,
-      color: 'green',
-      bgColor: 'bg-green-50',
-      iconColor: 'text-green-600',
-    },
-    {
-      title: 'Bài học ngữ pháp',
-      value: '328',
-      change: '+5.1%',
-      isIncrease: true,
-      icon: GraduationCap,
-      color: 'purple',
-      bgColor: 'bg-purple-50',
-      iconColor: 'text-purple-600',
-    },
-    {
-      title: 'Bài tập đang hoạt động',
-      value: '1,245',
-      change: '-2.4%',
-      isIncrease: false,
-      icon: Target,
-      color: 'orange',
-      bgColor: 'bg-orange-50',
-      iconColor: 'text-orange-600',
-    },
-    {
-      title: 'Tổng XP',
-      value: '1.2M',
-      change: '+18.3%',
-      isIncrease: true,
-      icon: Award,
-      color: 'yellow',
-      bgColor: 'bg-yellow-50',
-      iconColor: 'text-yellow-600',
-    },
-    {
-      title: 'Bài nộp viết',
-      value: '892',
-      change: '+15.7%',
-      isIncrease: true,
-      icon: FileText,
-      color: 'indigo',
-      bgColor: 'bg-indigo-50',
-      iconColor: 'text-indigo-600',
-    },
-  ];
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  
-  const userGrowthData = [
-    { month: 'Thg 1', users: 1200, active: 980 },
-    { month: 'Thg 2', users: 1450, active: 1150 },
-    { month: 'Thg 3', users: 1680, active: 1320 },
-    { month: 'Thg 4', users: 1920, active: 1580 },
-    { month: 'Thg 5', users: 2180, active: 1820 },
-    { month: 'Thg 6', users: 2543, active: 2150 },
-  ];
+  // Fetch dashboard data from API
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
+        const response = await getAdminDashboard();
+        if (response.code === 1000) {
+          setDashboardData(response.result);
+        } else {
+          setError('Không thể tải dữ liệu dashboard');
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard:', err);
+        setError('Có lỗi xảy ra khi tải dữ liệu');
+      } finally {
+        setLoading(false);
+      }
+    };
 
- 
-  const activityData = [
-    { name: 'Từ vựng', value: 35, color: '#3b82f6' },
-    { name: 'Ngữ pháp', value: 28, color: '#8b5cf6' },
-    { name: 'Viết', value: 22, color: '#10b981' },
-    { name: 'Bài tập', value: 15, color: '#f59e0b' },
-  ];
+    fetchDashboard();
+  }, []);
 
-  // Topic Performance Data (chủ đề sang tiếng Việt)
-  const topicPerformanceData = [
-    { topic: 'Tiếng Anh Thương mại', completed: 450, inProgress: 120 },
-    { topic: 'Du lịch', completed: 380, inProgress: 95 },
-    { topic: 'Công nghệ', completed: 320, inProgress: 150 },
-    { topic: 'Cuộc sống hàng ngày', completed: 290, inProgress: 80 },
-    { topic: 'Ẩm thực', completed: 260, inProgress: 70 },
-  ];
+  // Map icon names to components
+  const iconMap = {
+    Users,
+    BookOpen,
+    GraduationCap,
+    Target,
+    Award,
+    FileText,
+  };
 
-  // Recent Activities (nội dung và hành động sang tiếng Việt)
-  const recentActivities = [
-    { id: 1, user: 'John Doe', action: 'hoàn thành', item: 'Chủ đề Tiếng Anh Thương mại', time: '5 phút trước' },
-    { id: 2, user: 'Jane Smith', action: 'đạt được', item: 'Huy hiệu Ngữ pháp', time: '12 phút trước' },
-    { id: 3, user: 'Mike Johnson', action: 'đã nộp', item: 'Bài tập viết luận', time: '25 phút trước' },
-    { id: 4, user: 'Sarah Wilson', action: 'bắt đầu', item: 'Từ vựng Công nghệ', time: '1 giờ trước' },
-    { id: 5, user: 'Tom Brown', action: 'hoàn thành', item: 'Bộ bài tập ngữ pháp', time: '2 giờ trước' },
-  ];
+  // Map stats data with icons
+  const stats = dashboardData?.stats?.map(stat => ({
+    ...stat,
+    icon: iconMap[stat.icon] || Users,
+    bgColor: `bg-${stat.color}-50`,
+    iconColor: `text-${stat.color}-600`,
+  })) || [];
+
+  const userGrowthData = dashboardData?.userGrowthData || [];
+  const activityData = dashboardData?.activityDistribution || [];
+  const topicPerformanceData = dashboardData?.topicPerformance || [];
+  const recentActivities = dashboardData?.recentActivities || [];
 
   // add mounted flag to avoid rendering ResponsiveContainer before client mount
   const [mounted, setMounted] = useState(false);
@@ -177,7 +126,21 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Loading and Error States */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && dashboardData && (
+        <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"> {/* gap-6 -> gap-4 */}
         {stats.map((stat, index) => (
           <div
@@ -220,12 +183,18 @@ const AdminDashboard = () => {
             <Activity className="w-4 h-4 text-gray-400" /> {/* w-5->w-4 */}
           </div>
 
+          {userGrowthData.length > 0 ? (
           <ChartWrapper height={240}>
             {(width, height) => (
-              <LineChart width={width} height={height} data={userGrowthData}>
+              <LineChart 
+                width={width} 
+                height={height} 
+                data={userGrowthData}
+                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="month" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
+                <XAxis dataKey="month" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#fff',
@@ -233,7 +202,7 @@ const AdminDashboard = () => {
                     borderRadius: '8px',
                   }}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: '12px' }} />
                 <Line
                   type="monotone"
                   dataKey="users"
@@ -253,6 +222,11 @@ const AdminDashboard = () => {
               </LineChart>
             )}
           </ChartWrapper>
+          ) : (
+            <div className="flex items-center justify-center h-60 text-gray-400">
+              <p>Chưa có dữ liệu</p>
+            </div>
+          )}
         </div>
 
         {/* Activity Distribution Chart */}
@@ -260,32 +234,61 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-base font-semibold text-gray-900">Phân bổ hoạt động</h2>
-              <p className="text-xs text-gray-600">Tương tác người dùng theo loại</p>
+              <p className="text-xs text-gray-600">Tương tác người dùng theo loại (30 ngày gần nhất)</p>
             </div>
             <TrendingUp className="w-4 h-4 text-gray-400" />
           </div>
 
-          <ChartWrapper height={240}>
-            {(width, height) => (
-              <PieChart width={width} height={height}>
-                <Pie
-                  data={activityData}
-                  cx={Math.min(120, width / 2)}
-                  cy={height / 2}
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={Math.min(100, Math.floor(Math.min(width, height) / 2) - 10)}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {activityData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            )}
+          {activityData.length > 0 ? (
+          <ChartWrapper height={280}>
+            {(width, height) => {
+              const chartWidth = width;
+              const chartHeight = height;
+              const pieRadius = Math.min(80, Math.floor(Math.min(chartWidth * 0.35, chartHeight * 0.35)));
+              const cx = chartWidth * 0.35;
+              const cy = chartHeight / 2;
+              
+              return (
+                <PieChart width={chartWidth} height={chartHeight}>
+                  <Pie
+                    data={activityData}
+                    cx={cx}
+                    cy={cy}
+                    labelLine={false}
+                    label={false}
+                    outerRadius={pieRadius}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {activityData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value, name) => [`${value}%`, name]}
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Legend 
+                    layout="vertical" 
+                    verticalAlign="middle" 
+                    align="right"
+                    wrapperStyle={{ fontSize: '12px', paddingLeft: '10px' }}
+                    formatter={(value, entry) => `${entry.payload.name}: ${entry.payload.value}%`}
+                  />
+                </PieChart>
+              );
+            }}
           </ChartWrapper>
+          ) : (
+            <div className="flex items-center justify-center h-60 text-gray-400">
+              <p>Chưa có dữ liệu hoạt động</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -294,29 +297,50 @@ const AdminDashboard = () => {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-base font-semibold text-gray-900">Hiệu suất theo chủ đề</h2>
-            <p className="text-xs text-gray-600">Hoàn thành vs Đang tiến hành theo chủ đề</p>
+            <p className="text-xs text-gray-600">Top 5 chủ đề được học nhiều nhất</p>
           </div>
         </div>
 
-        <ChartWrapper height={240}>
+        {topicPerformanceData.length > 0 && topicPerformanceData[0].topic !== "Chưa có dữ liệu" ? (
+        <ChartWrapper height={300}>
           {(width, height) => (
-            <BarChart width={width} height={height} data={topicPerformanceData}>
+            <BarChart 
+              width={width} 
+              height={height} 
+              data={topicPerformanceData}
+              margin={{ top: 5, right: 20, left: 0, bottom: 80 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="topic" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
+              <XAxis 
+                dataKey="topic" 
+                stroke="#6b7280" 
+                angle={-45} 
+                textAnchor="end" 
+                height={100}
+                interval={0}
+                style={{ fontSize: '11px' }}
+                tick={{ dy: 5 }}
+              />
+              <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#fff',
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
+                  fontSize: '12px'
                 }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: '12px' }} />
               <Bar dataKey="completed" fill="#3b82f6" radius={[8, 8, 0, 0]} name="Hoàn thành" />
               <Bar dataKey="inProgress" fill="#8b5cf6" radius={[8, 8, 0, 0]} name="Đang tiến hành" />
             </BarChart>
           )}
         </ChartWrapper>
+        ) : (
+          <div className="flex items-center justify-center h-60 text-gray-400">
+            <p>Chưa có dữ liệu học tập theo chủ đề</p>
+          </div>
+        )}
       </div>
 
       {/* Recent Activities */}
@@ -348,6 +372,8 @@ const AdminDashboard = () => {
           ))}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

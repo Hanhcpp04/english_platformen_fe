@@ -146,40 +146,70 @@ const WritingPage = () => {
   };
 
   const handleSubmit = async (data) => {
+    if (!userId) {
+      toast.error("Vui lòng đăng nhập!");
+      return;
+    }
+
     setLoading(true);
     try {
-      // Mock scoring
-      const mockScores = {
-        grammarScore: Math.floor(Math.random() * 20) + 75,
-        vocabularyScore: Math.floor(Math.random() * 20) + 70,
-        coherenceScore: Math.floor(Math.random() * 20) + 75,
+      // Prepare request data
+      const requestData = {
+        taskId: currentWriting.taskId || null,
+        content: data.user_content,
+        mode: currentWriting.mode || "PROMPT",
+        timeSpent: data.time_spent || 0,
       };
 
-      const overallScore = Math.round(
-        (mockScores.grammarScore +
-          mockScores.vocabularyScore +
-          mockScores.coherenceScore) /
-          3
-      );
+      console.log("=== Submitting Writing ===");
+      console.log("User ID:", userId);
+      console.log("Request Data:", requestData);
 
+      // Call API to grade writing
+      const response = await writingService.submitWriting(userId, requestData);
+
+      console.log("=== API Response ===");
+      console.log("Full Response:", response);
+
+      // Extract result from API response
+      // Check if response has 'result' property (wrapped response) or is direct data
+      const result = response.result || response;
+
+      // Update current writing with grading results
       const updatedWriting = {
         ...currentWriting,
         ...data,
-        ...mockScores,
-        overallScore,
-        is_completed: true,
-        isCompleted: true,
-        aiFeedback: `Bài viết của bạn đạt ${overallScore} điểm. Điểm ngữ pháp: ${mockScores.grammarScore}/100, Từ vựng: ${mockScores.vocabularyScore}/100, Mạch lạc: ${mockScores.coherenceScore}/100. Bạn đã làm tốt!`,
+        id: result.promptId,
+        grammarScore: result.grammarScore,
+        vocabularyScore: result.vocabularyScore,
+        coherenceScore: result.coherenceScore,
+        overallScore: result.overallScore,
+        generalFeedback: result.generalFeedback,
+        aiFeedback: result.generalFeedback, // Keep for backward compatibility
+        grammarSuggestions: result.grammarSuggestions || [],
+        vocabularySuggestions: result.vocabularySuggestions || [],
+        wordCount: result.wordCount,
+        xpEarned: result.xpEarned,
+        is_completed: result.isCompleted,
+        isCompleted: result.isCompleted,
         submittedAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
       };
 
       setCurrentWriting(updatedWriting);
 
-      // Cập nhật lại prompts list
+      // Update prompts list
       setPrompts((prev) => [...prev, updatedWriting]);
+
+      toast.success(
+        `Bài viết đã được chấm điểm! Điểm tổng: ${result.overallScore}/100 | XP: +${result.xpEarned}`
+      );
     } catch (error) {
       console.error("Error submitting:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Không thể chấm điểm bài viết. Vui lòng thử lại!"
+      );
       throw error;
     } finally {
       setLoading(false);

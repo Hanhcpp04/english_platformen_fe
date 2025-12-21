@@ -6,6 +6,7 @@ import UserManagement from './UserManagement';
 import TopicVocabManagement from './TopicVocabManagement';
 import VocabManagement from './VocabManagement';
 import GrammarManagement from './GrammarManagement';
+import GrammarLessonManagement from './GrammarLessonManagement';
 import WritingManagement from './WritingManagement';
 import ForumManagement from './ForumManagement';
 
@@ -19,6 +20,7 @@ const Admin = () => {
         <Route path="/topics" element={<TopicVocabManagement />} />
         <Route path="/vocabulary" element={<VocabManagement />} />
         <Route path="/grammar" element={<GrammarManagement />} />
+        <Route path="/grammar-lessons" element={<GrammarLessonManagement />} />
         <Route path="/writing" element={<WritingManagement />} />
         <Route path="/forum" element={<ForumManagement />} />
       </Routes>

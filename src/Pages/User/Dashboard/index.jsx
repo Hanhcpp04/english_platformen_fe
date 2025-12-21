@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BookOpen,
@@ -17,15 +17,55 @@ import {
   CheckCircle2,
   Circle,
 } from 'lucide-react';
+import { getProfile } from '../../../service/authService';
+import { getUserBadgesSummary } from '../../../service/badgeService';
+import { getDashboardSummary } from '../../../service/dashboardService';
+import { toast } from 'react-toastify';
 
 const Dashboard = () => {
+  const [userData, setUserData] = useState(null);
+  const [badgeData, setBadgeData] = useState(null);
+  const [moduleStats, setModuleStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch user data and badges
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Lấy thông tin user
+        const userResponse = await getProfile();
+        const user = userResponse.result;
+        setUserData(user);
+
+        // Lấy thông tin badges
+        if (user?.id) {
+          const badgesResponse = await getUserBadgesSummary(user.id, 6);
+          setBadgeData(badgesResponse.result);
+        }
+
+        // Lấy thống kê các module
+        const statsResponse = await getDashboardSummary();
+        setModuleStats(statsResponse.result);
+        
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        toast.error('Không thể tải dữ liệu dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
   const learningModules = [
     {
       id: 1,
       title: 'Từ vựng',
       description: 'Học từ vựng qua flashcard và hình ảnh',
       icon: BookOpen,
-      progress: '45/100',
+      progress: moduleStats?.vocabularyStats?.progressText || '0/0',
       bgColor: 'bg-primary',
       bgColorLight: 'bg-primary/10',
       textColor: 'text-primary',
@@ -39,7 +79,7 @@ const Dashboard = () => {
       title: 'Ngữ pháp',
       description: 'Bài giảng và thực hành ngữ pháp',
       icon: Target,
-      progress: '32/80',
+      progress: moduleStats?.grammarStats?.progressText || '0/0',
       bgColor: 'bg-yellow-600',
       bgColorLight: 'bg-yellow-50',
       textColor: 'text-yellow-600',
@@ -53,7 +93,7 @@ const Dashboard = () => {
       title: 'Luyện viết',
       description: 'Cải thiện kỹ năng viết với AI',
       icon: PenTool,
-      progress: '8 bài',
+      progress: moduleStats?.writingStats?.progressText || '0 bài',
       bgColor: 'bg-green-600',
       bgColorLight: 'bg-green-50',
       textColor: 'text-green-600',
@@ -67,7 +107,7 @@ const Dashboard = () => {
       title: 'Diễn đàn',
       description: 'Kết nối và học hỏi từ cộng đồng',
       icon: MessageSquare,
-      progress: '24 bài',
+      progress: moduleStats?.forumStats?.progressText || '0 bài',
       bgColor: 'bg-purple-600',
       bgColorLight: 'bg-purple-50',
       textColor: 'text-purple-600',
@@ -86,41 +126,60 @@ const Dashboard = () => {
     { id: 5, text: 'Học 20 phút', completed: false },
   ];
 
-  const recentBadges = [
-    { id: 1, icon: Trophy, gradient: 'from-yellow-400 to-orange-500', name: 'First Win' },
-    { id: 2, icon: Star, gradient: 'from-blue-400 to-cyan-500', name: 'Scholar' },
-    { id: 3, icon: Flame, gradient: 'from-red-400 to-pink-500', name: 'Hot Streak' },
-    { id: 4, icon: Award, gradient: 'from-purple-400 to-indigo-500', name: 'Master' },
-    { id: 5, icon: Zap, gradient: 'from-green-400 to-emerald-500', name: 'Speed' },
-    { id: 6, icon: Target, gradient: 'from-orange-400 to-red-500', name: 'Accuracy' },
-  ];
-
-  const stats = [
-    {
-      icon: Zap,
-      value: '15',
-      label: 'Ngày streak',
-      bgColor: 'bg-orange-50',
-      iconColor: 'text-orange-500',
-    },
-    {
-      icon: Award,
-      value: '12',
-      label: 'Huy hiệu',
-      bgColor: 'bg-yellow-50',
-      iconColor: 'text-yellow-500',
-    },
-    {
-      icon: TrendingUp,
-      value: '89%',
-      label: 'Độ chính xác',
-      bgColor: 'bg-green-50',
-      iconColor: 'text-green-500',
-    },
-  ];
-
   const completedGoals = dailyGoals.filter((goal) => goal.completed).length;
   const goalProgress = Math.round((completedGoals / dailyGoals.length) * 100);
+
+  // Calculate level progress
+  const calculateLevelProgress = () => {
+    if (!userData?.currentLevel || !userData?.totalXp) return 0;
+    
+    const { minXp, maxXp } = userData.currentLevel;
+    const currentProgress = userData.totalXp - minXp;
+    const totalRequired = maxXp - minXp;
+    
+    return Math.round((currentProgress / totalRequired) * 100);
+  };
+
+  const calculateXpToNextLevel = () => {
+    if (!userData?.currentLevel || !userData?.totalXp) return 0;
+    return userData.currentLevel.maxXp - userData.totalXp;
+  };
+
+  // Map badge icons
+  const getBadgeIcon = (conditionType) => {
+    const iconMap = {
+      'VOCABULARY_WORDS': BookOpen,
+      'VOCABULARY_TOPICS': Target,
+      'GRAMMAR_LESSONS': PenTool,
+      'WRITING_ESSAYS': MessageSquare,
+      'TOTAL_XP': Zap,
+      'STREAK_DAYS': Flame,
+    };
+    return iconMap[conditionType] || Award;
+  };
+
+  const getBadgeGradient = (index) => {
+    const gradients = [
+      'from-yellow-400 to-orange-500',
+      'from-blue-400 to-cyan-500',
+      'from-red-400 to-pink-500',
+      'from-purple-400 to-indigo-500',
+      'from-green-400 to-emerald-500',
+      'from-orange-400 to-red-500',
+    ];
+    return gradients[index % gradients.length];
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -131,7 +190,7 @@ const Dashboard = () => {
             {/* WELCOME SECTION */}
             <div className="space-y-2">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-                Chào mừng trở lại, Nguyễn! 👋
+                Chào mừng trở lại, {userData?.fullname || userData?.username || 'bạn'}! 👋
               </h1>
               <p className="text-gray-600 text-lg">
                 Hãy tiếp tục hành trình học tiếng Anh của bạn
@@ -146,44 +205,72 @@ const Dashboard = () => {
                   <h2 className="text-2xl font-bold text-gray-900 mb-1">
                     Tiến trình học tập
                   </h2>
-                  <p className="text-gray-600">Level 5 - Intermediate Learner</p>
+                  <p className="text-gray-600">
+                    {userData?.currentLevel ? 
+                      `Level ${userData.currentLevel.levelNumber} - ${userData.currentLevel.levelName}` : 
+                      'Đang tải...'
+                    }
+                  </p>
                 </div>
                 <div className="px-4 py-2 bg-primary rounded-lg">
-                  <span className="text-white font-bold text-lg">2,450 XP</span>
+                  <span className="text-white font-bold text-lg">
+                    {userData?.totalXp || 0} XP
+                  </span>
                 </div>
               </div>
 
               {/* Progress Bar */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="font-medium text-gray-700">Tiến độ lên Level 6</span>
-                  <span className="text-gray-600">550 XP nữa</span>
+                  <span className="font-medium text-gray-700">
+                    Tiến độ lên Level {userData?.currentLevel ? userData.currentLevel.levelNumber + 1 : '...'}
+                  </span>
+                  <span className="text-gray-600">
+                    {calculateXpToNextLevel()} XP nữa
+                  </span>
                 </div>
                 <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
-                    style={{ width: '82%' }}
+                    style={{ width: `${calculateLevelProgress()}%` }}
                   />
                 </div>
-                <div className="text-right text-sm font-medium text-primary">82%</div>
+                <div className="text-right text-sm font-medium text-primary">
+                  {calculateLevelProgress()}%
+                </div>
               </div>
 
               {/* Stats Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-                {stats.map((stat, index) => (
-                  <div
-                    key={index}
-                    className={`${stat.bgColor} rounded-lg p-4 text-center hover:shadow-md transition-all duration-200`}
-                  >
-                    <div className="flex justify-center mb-2">
-                      <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900 mb-1">
-                      {stat.value}
-                    </div>
-                    <div className="text-sm text-gray-600">{stat.label}</div>
+                <div className="bg-orange-50 rounded-lg p-4 text-center hover:shadow-md transition-all duration-200">
+                  <div className="flex justify-center mb-2">
+                    <Zap className="w-6 h-6 text-orange-500" />
                   </div>
-                ))}
+                  <div className="text-2xl font-bold text-gray-900 mb-1">
+                    {userData?.streak?.currentStreak || 0}
+                  </div>
+                  <div className="text-sm text-gray-600">Ngày streak</div>
+                </div>
+                
+                <div className="bg-yellow-50 rounded-lg p-4 text-center hover:shadow-md transition-all duration-200">
+                  <div className="flex justify-center mb-2">
+                    <Award className="w-6 h-6 text-yellow-500" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 mb-1">
+                    {badgeData?.earnedBadges || 0}
+                  </div>
+                  <div className="text-sm text-gray-600">Huy hiệu</div>
+                </div>
+                
+                <div className="bg-green-50 rounded-lg p-4 text-center hover:shadow-md transition-all duration-200">
+                  <div className="flex justify-center mb-2">
+                    <TrendingUp className="w-6 h-6 text-green-500" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 mb-1">
+                    {userData?.streak?.totalStudyDays || 0}
+                  </div>
+                  <div className="text-sm text-gray-600">Ngày học</div>
+                </div>
               </div>
             </div>
 
@@ -291,14 +378,24 @@ const Dashboard = () => {
 
               {/* Badges Grid */}
               <div className="grid grid-cols-3 gap-3">
-                {recentBadges.map((badge) => (
-                  <div
-                    key={badge.id}
-                    className={`aspect-square rounded-lg bg-gradient-to-br ${badge.gradient} p-3 flex items-center justify-center hover:scale-110 transition-transform duration-200 cursor-pointer shadow-md`}
-                  >
-                    <badge.icon className="w-8 h-8 text-white" />
+                {badgeData?.recentBadges && badgeData.recentBadges.length > 0 ? (
+                  badgeData.recentBadges.map((badge, index) => {
+                    const BadgeIcon = getBadgeIcon(badge.conditionType);
+                    return (
+                      <div
+                        key={badge.id}
+                        className={`aspect-square rounded-lg bg-gradient-to-br ${getBadgeGradient(index)} p-3 flex items-center justify-center hover:scale-110 transition-transform duration-200 cursor-pointer shadow-md`}
+                        title={badge.name}
+                      >
+                        <BadgeIcon className="w-8 h-8 text-white" />
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="col-span-3 text-center text-gray-500 py-4">
+                    Chưa có huy hiệu nào
                   </div>
-                ))}
+                )}
               </div>
             </div>
 

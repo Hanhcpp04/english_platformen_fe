@@ -33,7 +33,6 @@ export default function PostList() {
 
       if (response.code === 1000 && response.result) {
         // Map API response to component state (PostListResponse structure)
-        const BASE_UPLOAD_URL = "http://localhost:8088/api/v1/uploads/forum/";
         const mappedPosts = response.result.posts.map(post => ({
           id: post.id,
           title: post.title,
@@ -48,11 +47,11 @@ export default function PostList() {
           likes_count: post.likesCount,
           comments_count: post.commentsCount,
           views: post.viewsCount,
-          images: post.media?.filter(m => m.mediaType === 'image').map(m => BASE_UPLOAD_URL + m.url) || [],
+          images: post.media?.filter(m => m.mediaType === 'image').map(m => m.url) || [],
           files: post.media?.filter(m => m.mediaType === 'file').map(m => ({
             name: m.fileName,
             size: formatFileSize(m.fileSize),
-            url: BASE_UPLOAD_URL + m.url,
+            url: m.url,
           })) || [],
           hasLiked: post.isLiked,
           hasBookmarked: false, // Not in API
