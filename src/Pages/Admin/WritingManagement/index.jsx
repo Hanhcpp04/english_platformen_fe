@@ -265,8 +265,8 @@ const WritingManagement = () => {
               className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
             >
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <BookOpen className="w-6 h-6 text-purple-600" />
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <BookOpen className="w-6 h-6 text-gray-700" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900">{topic.name}</h3>
@@ -316,7 +316,7 @@ const WritingManagement = () => {
           </button>
           <button
             onClick={openAddModal}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
+            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Thêm bài tập
@@ -332,90 +332,92 @@ const WritingManagement = () => {
           placeholder="Tìm kiếm bài tập..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-700"
         />
       </div>
 
-      {/* Tasks Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Câu hỏi</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">XP</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Bài nộp</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Tiêu chí</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Trạng thái</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">Hành động</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {filteredTasks.map((task) => (
-              <tr key={task.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => setViewQuestion(task)}
-                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-left"
-                  >
-                    <Eye className="w-4 h-4" />
-                    <span className="line-clamp-2">{task.question}</span>
-                  </button>
-                </td>
-                <td className="px-6 py-4 text-sm">{task.xpReward} XP</td>
-                <td className="px-6 py-4 text-sm">{task.totalSubmissions || 0}</td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => openGradingModal(task)}
-                    className="text-purple-600 hover:text-purple-800 flex items-center gap-1"
-                  >
-                    <Settings className="w-4 h-4" />
-                    {task.gradingCriteria ? (
-                      <span className="text-xs">
-                        G:{task.gradingCriteria.grammarWeight}% 
-                        V:{task.gradingCriteria.vocabularyWeight}% 
-                        C:{task.gradingCriteria.coherenceWeight}%
-                      </span>
-                    ) : (
-                      <span className="text-xs">Chỉnh sửa</span>
-                    )}
-                  </button>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    task.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {task.isActive ? 'Hoạt động' : 'Đã xóa'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => openEditModal(task)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                      title="Sửa"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteRestore(task.id, task.isActive)}
-                      className={`p-2 rounded ${
-                        task.isActive 
-                          ? 'text-red-600 hover:bg-red-50' 
-                          : 'text-green-600 hover:bg-green-50'
-                      }`}
-                      title={task.isActive ? 'Xóa' : 'Khôi phục'}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
+      {/* Tasks Table (Excel style) */}
+      <div className="bg-white border-2 border-gray-300 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-300">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Câu hỏi</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">XP</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Bài nộp</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Tiêu chí</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Trạng thái</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Hành động</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-300">
+              {filteredTasks.map((task) => (
+                <tr key={task.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 border-r border-gray-300">
+                    <button
+                      onClick={() => setViewQuestion(task)}
+                      className="text-gray-700 hover:text-gray-900 flex items-center gap-2 text-left"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span className="line-clamp-2 text-sm">{task.question}</span>
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-sm border-r border-gray-300">{task.xpReward} XP</td>
+                  <td className="px-4 py-3 text-sm border-r border-gray-300">{task.totalSubmissions || 0}</td>
+                  <td className="px-4 py-3 border-r border-gray-300">
+                    <button
+                      onClick={() => openGradingModal(task)}
+                      className="text-gray-700 hover:text-gray-900 flex items-center gap-2"
+                    >
+                      <Settings className="w-4 h-4" />
+                      {task.gradingCriteria ? (
+                        <span className="text-xs">
+                          G:{task.gradingCriteria.grammarWeight}% 
+                          V:{task.gradingCriteria.vocabularyWeight}% 
+                          C:{task.gradingCriteria.coherenceWeight}%
+                        </span>
+                      ) : (
+                        <span className="text-xs">Chỉnh sửa</span>
+                      )}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-center border-r border-gray-300">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      task.isActive ? 'bg-gray-200 text-gray-800' : 'bg-gray-300 text-gray-700'
+                    }`}>
+                      {task.isActive ? 'Hoạt động' : 'Đã xóa'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => openEditModal(task)}
+                        className="p-1.5 text-gray-700 hover:bg-gray-100 rounded"
+                        title="Sửa"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRestore(task.id, task.isActive)}
+                        className={`p-1.5 rounded ${
+                          task.isActive 
+                            ? 'text-gray-700 hover:bg-gray-200' 
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                        title={task.isActive ? 'Xóa' : 'Khôi phục'}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination */}
-        <div className="bg-gray-50 px-6 py-3 border-t flex justify-between items-center">
+        <div className="px-4 py-3 bg-gray-50 border-t border-gray-300 flex justify-between items-center">
           <span className="text-sm text-gray-600">
             Hiển thị {filteredTasks.length} / {totalElements}
           </span>
@@ -423,15 +425,15 @@ const WritingManagement = () => {
             <button
               onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
               disabled={currentPage === 0 || loading}
-              className="px-3 py-1 border rounded disabled:opacity-50"
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Trước
             </button>
-            <span className="px-3 py-1">Trang {currentPage + 1} / {totalPages || 1}</span>
+            <span className="px-3 py-1.5 text-sm text-gray-700">Trang {currentPage + 1} / {totalPages || 1}</span>
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
               disabled={currentPage >= totalPages - 1 || loading}
-              className="px-3 py-1 border rounded disabled:opacity-50"
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Sau
             </button>
@@ -458,7 +460,7 @@ const WritingManagement = () => {
                 <textarea
                   value={formData.question}
                   onChange={(e) => setFormData({ ...formData, question: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                   rows={5}
                   placeholder="Nhập câu hỏi cho bài viết..."
                   required
@@ -470,7 +472,7 @@ const WritingManagement = () => {
                 <textarea
                   value={formData.writingTips}
                   onChange={(e) => setFormData({ ...formData, writingTips: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                   rows={4}
                   placeholder="Nhập gợi ý để học viên viết tốt hơn..."
                 />
@@ -482,7 +484,7 @@ const WritingManagement = () => {
                   type="number"
                   value={formData.xpReward}
                   onChange={(e) => setFormData({ ...formData, xpReward: parseInt(e.target.value) || 50 })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                   min="1"
                 />
               </div>
@@ -507,7 +509,7 @@ const WritingManagement = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
+                  className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {modalMode === 'add' ? 'Thêm' : 'Lưu'}
@@ -533,9 +535,9 @@ const WritingManagement = () => {
             </div>
 
             <div className="p-4 space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-800">
+              <div className="bg-gray-100 border border-gray-300 rounded-lg p-3 flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 text-gray-700 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-gray-800">
                   <strong>Lưu ý:</strong> Tổng tỷ trọng của Grammar + Vocabulary + Coherence phải = 100%
                 </div>
               </div>
@@ -547,7 +549,7 @@ const WritingManagement = () => {
                     type="number"
                     value={gradingData.grammarWeight}
                     onChange={(e) => setGradingData({ ...gradingData, grammarWeight: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                     min="0"
                     max="100"
                   />
@@ -558,7 +560,7 @@ const WritingManagement = () => {
                     type="number"
                     value={gradingData.vocabularyWeight}
                     onChange={(e) => setGradingData({ ...gradingData, vocabularyWeight: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                     min="0"
                     max="100"
                   />
@@ -569,7 +571,7 @@ const WritingManagement = () => {
                     type="number"
                     value={gradingData.coherenceWeight}
                     onChange={(e) => setGradingData({ ...gradingData, coherenceWeight: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                     min="0"
                     max="100"
                   />
@@ -579,8 +581,8 @@ const WritingManagement = () => {
               <div className="text-sm text-center">
                 Tổng: <strong className={`text-lg ${
                   (gradingData.grammarWeight + gradingData.vocabularyWeight + gradingData.coherenceWeight) === 100
-                    ? 'text-green-600'
-                    : 'text-red-600'
+                    ? 'text-gray-800'
+                    : 'text-gray-700'
                 }`}>
                   {gradingData.grammarWeight + gradingData.vocabularyWeight + gradingData.coherenceWeight}%
                 </strong>
@@ -593,7 +595,7 @@ const WritingManagement = () => {
                     type="number"
                     value={gradingData.minWordCount}
                     onChange={(e) => setGradingData({ ...gradingData, minWordCount: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                     min="1"
                   />
                 </div>
@@ -603,7 +605,7 @@ const WritingManagement = () => {
                     type="number"
                     value={gradingData.maxWordCount}
                     onChange={(e) => setGradingData({ ...gradingData, maxWordCount: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                     min="1"
                   />
                 </div>
@@ -614,7 +616,7 @@ const WritingManagement = () => {
                 <textarea
                   value={gradingData.customInstructions}
                   onChange={(e) => setGradingData({ ...gradingData, customInstructions: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                   rows={4}
                   placeholder="Nhập hướng dẫn đặc biệt cho AI khi chấm bài..."
                 />
@@ -629,7 +631,7 @@ const WritingManagement = () => {
                 </button>
                 <button
                   onClick={handleUpdateGradingCriteria}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
+                  className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   Lưu tiêu chí

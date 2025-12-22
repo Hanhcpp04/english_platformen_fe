@@ -311,16 +311,18 @@ const VocabManagement = () => {
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900">{topic.englishName}</h3>
                   <p className="text-sm text-gray-600">{topic.name}</p>
-                  <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
-                    <span className="flex items-center gap-1">
+                  <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full">
                       <BookOpen className="w-3 h-3" />
-                      {topic.totalWords || 0} từ
+                      {topic.totalWords || 0}
                     </span>
-                    <span>{topic.xpReward} XP</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-200 text-gray-700 rounded-full">
+                      {topic.xpReward} XP
+                    </span>
                   </div>
                   <div className="mt-2">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs ${
-                      topic.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      topic.isActive ? 'bg-gray-200 text-gray-800' : 'bg-gray-300 text-gray-700'
                     }`}>
                       {topic.isActive ? 'Hoạt động' : 'Đã xóa'}
                     </span>
@@ -350,13 +352,17 @@ const VocabManagement = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-3xl">{selectedTopic.iconUrl || '📚'}</span>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{selectedTopic.englishName}</h1>
-                <p className="text-sm text-gray-500">{selectedTopic.name} - {totalElements} từ</p>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{selectedTopic.iconUrl || '📚'}</span>
+                <div>
+                  <h1 className="text-lg font-semibold text-gray-900">{selectedTopic.englishName}</h1>
+                  <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded">{selectedTopic.name}</span>
+                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded">{totalElements} từ</span>
+                    <span className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded">{selectedTopic.xpReward} XP</span>
+                  </div>
+                </div>
               </div>
-            </div>
           </div>
         </div>
         <div className="flex gap-2">
@@ -370,7 +376,7 @@ const VocabManagement = () => {
           </button>
           <button
             onClick={handleDownloadTemplate}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
             Tải mẫu Excel
@@ -378,7 +384,7 @@ const VocabManagement = () => {
           <button
             onClick={handleUploadClick}
             disabled={importing}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
           >
             <Upload className="w-4 h-4" />
             {importing ? 'Đang import...' : 'Nhập từ Excel'}
@@ -392,7 +398,7 @@ const VocabManagement = () => {
           />
           <button
             onClick={openAddModal}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Thêm từ
@@ -408,98 +414,144 @@ const VocabManagement = () => {
           placeholder="Tìm kiếm từ vựng..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-700"
         />
       </div>
 
-      {/* Words Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Từ tiếng Anh</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Nghĩa tiếng Việt</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Phát âm</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Loại từ</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">XP</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Trạng thái</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">Hành động</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {filteredWords.map((word) => (
-              <tr key={word.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
-                  <div className="font-medium text-gray-900">{word.englishWord}</div>
-                  {word.exampleSentence && (
-                    <div className="text-xs text-gray-500 mt-1 italic">{word.exampleSentence}</div>
-                  )}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm text-gray-900">{word.vietnameseMeaning}</div>
-                  {word.exampleTranslation && (
-                    <div className="text-xs text-gray-500 mt-1 italic">{word.exampleTranslation}</div>
-                  )}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">{word.pronunciation || '-'}</td>
-                <td className="px-6 py-4">
-                  <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
-                    {word.wordType || 'N/A'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm">{word.xpReward} XP</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    word.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {word.isActive ? 'Hoạt động' : 'Đã xóa'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => openEditModal(word)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                      title="Sửa"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteRestore(word.id, word.isActive)}
-                      className={`p-2 rounded ${
-                        word.isActive 
-                          ? 'text-red-600 hover:bg-red-50' 
-                          : 'text-green-600 hover:bg-green-50'
-                      }`}
-                      title={word.isActive ? 'Xóa' : 'Khôi phục'}
-                    >
-                      {word.isActive ? <Trash2 className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </td>
+      {/* Words Table (Excel style) */}
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-300">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-2 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  STT
+                </th>
+                <th className="px-2 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Từ tiếng Anh
+                </th>
+                <th className="px-2 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Nghĩa tiếng Việt
+                </th>
+                <th className="px-2 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Phát âm
+                </th>
+                <th className="px-2 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Loại từ
+                </th>
+                <th className="px-2 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Câu ví dụ
+                </th>
+                <th className="px-2 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Dịch câu ví dụ
+                </th>
+                <th className="px-2 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  XP
+                </th>
+                <th className="px-2 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                  Trạng thái
+                </th>
+                <th className="px-2 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider sticky right-0 bg-gray-50">
+                  Thao tác
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredWords.map((word, index) => (
+                <tr key={word.id} className="hover:bg-gray-50">
+                  <td className="px-2 py-3 text-sm text-gray-900 border-r border-gray-200">
+                    {currentPage * pageSize + index + 1}
+                  </td>
+                  <td className="px-2 py-3 text-sm font-medium text-gray-900 border-r border-gray-200">
+                    {word.englishWord}
+                  </td>
+                  <td className="px-2 py-3 text-sm text-gray-700 border-r border-gray-200">
+                    {word.vietnameseMeaning}
+                  </td>
+                  <td className="px-2 py-3 text-sm text-gray-500 border-r border-gray-200">
+                    {word.pronunciation || '-'}
+                  </td>
+                  <td className="px-2 py-3 text-sm text-gray-600 border-r border-gray-200">
+                    <span className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs">
+                      {word.wordType}
+                    </span>
+                  </td>
+                  <td className="px-2 py-3 text-sm text-gray-600 border-r border-gray-200 max-w-xs">
+                    <div className="line-clamp-2" title={word.exampleSentence}>
+                      {word.exampleSentence || '-'}
+                    </div>
+                  </td>
+                  <td className="px-2 py-3 text-sm text-gray-600 border-r border-gray-200 max-w-xs">
+                    <div className="line-clamp-2" title={word.exampleTranslation}>
+                      {word.exampleTranslation || '-'}
+                    </div>
+                  </td>
+                  <td className="px-2 py-3 text-sm text-center border-r border-gray-200">
+                    <span className="inline-flex px-2 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium">
+                      {word.xpReward}
+                    </span>
+                  </td>
+                  <td className="px-2 py-3 text-sm text-center border-r border-gray-200">
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                      word.isActive 
+                        ? 'bg-gray-200 text-gray-800' 
+                        : 'bg-gray-300 text-gray-700'
+                    }`}>
+                      {word.isActive ? 'Hoạt động' : 'Đã xóa'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-center sticky right-0 bg-white">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => openEditModal(word)}
+                        className="p-1.5 text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                        title="Chỉnh sửa"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRestore(word.id, word.isActive)}
+                        className={`p-1.5 rounded transition-colors ${
+                          word.isActive 
+                            ? 'text-gray-700 hover:bg-gray-200' 
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                        title={word.isActive ? 'Xóa' : 'Khôi phục'}
+                      >
+                        {word.isActive ? (
+                          <Trash2 className="w-4 h-4" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination */}
-        <div className="bg-gray-50 px-6 py-3 border-t flex justify-between items-center">
-          <span className="text-sm text-gray-600">
-            Hiển thị {filteredWords.length} / {totalElements}
-          </span>
-          <div className="flex gap-2">
+        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Hiển thị {filteredWords.length} / {totalElements} từ
+          </div>
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
               disabled={currentPage === 0 || loading}
-              className="px-3 py-1 border rounded disabled:opacity-50"
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Trước
             </button>
-            <span className="px-3 py-1">Trang {currentPage + 1} / {totalPages || 1}</span>
+            <span className="px-3 py-1.5 text-sm text-gray-700">
+              Trang {currentPage + 1} / {totalPages || 1}
+            </span>
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
               disabled={currentPage >= totalPages - 1 || loading}
-              className="px-3 py-1 border rounded disabled:opacity-50"
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Sau
             </button>
@@ -528,7 +580,7 @@ const VocabManagement = () => {
                     type="text"
                     value={formData.englishWord}
                     onChange={(e) => setFormData({ ...formData, englishWord: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                     placeholder="VD: Hello, Computer..."
                     required
                   />
@@ -540,7 +592,7 @@ const VocabManagement = () => {
                     type="text"
                     value={formData.vietnameseMeaning}
                     onChange={(e) => setFormData({ ...formData, vietnameseMeaning: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                     placeholder="VD: Xin chào, Máy tính..."
                     required
                   />
@@ -552,7 +604,7 @@ const VocabManagement = () => {
                     type="text"
                     value={formData.pronunciation}
                     onChange={(e) => setFormData({ ...formData, pronunciation: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                     placeholder="VD: /həˈloʊ/"
                   />
                 </div>
@@ -562,7 +614,7 @@ const VocabManagement = () => {
                   <select
                     value={formData.wordType}
                     onChange={(e) => setFormData({ ...formData, wordType: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                   >
                     {WORD_TYPES.map((type) => (
                       <option key={type} value={type}>{type}</option>
@@ -575,7 +627,7 @@ const VocabManagement = () => {
                   <textarea
                     value={formData.exampleSentence}
                     onChange={(e) => setFormData({ ...formData, exampleSentence: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                     rows={2}
                     placeholder="VD: Hello, how are you?"
                   />
@@ -586,7 +638,7 @@ const VocabManagement = () => {
                   <textarea
                     value={formData.exampleTranslation}
                     onChange={(e) => setFormData({ ...formData, exampleTranslation: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                     rows={2}
                     placeholder="VD: Xin chào, bạn khỏe không?"
                   />
@@ -598,7 +650,7 @@ const VocabManagement = () => {
                     type="number"
                     value={formData.xpReward}
                     onChange={(e) => setFormData({ ...formData, xpReward: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                     min="1"
                   />
                 </div>
@@ -614,7 +666,7 @@ const VocabManagement = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                  className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {modalMode === 'add' ? 'Thêm' : 'Lưu'}

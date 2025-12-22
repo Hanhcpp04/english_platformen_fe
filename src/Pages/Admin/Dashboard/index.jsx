@@ -120,7 +120,7 @@ const AdminDashboard = () => {
           <button className="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
             Xuất dữ liệu
           </button>
-          <button className="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+          <button className="px-3 py-1 text-xs font-medium text-white bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors">
             Tạo báo cáo
           </button>
         </div>
@@ -129,12 +129,12 @@ const AdminDashboard = () => {
       {/* Loading and Error States */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800"></div>
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div className="bg-gray-100 border border-gray-300 text-gray-800 px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
@@ -153,11 +153,11 @@ const AdminDashboard = () => {
                 <p className="text-2xl font-semibold text-gray-900 mt-1">{stat.value}</p> {/* text-3xl -> text-2xl, font-bold->font-semibold */}
                 <div className="flex items-center gap-1 mt-2 text-xs"> {/* text-sm -> text-xs */}
                   {stat.isIncrease ? (
-                    <ArrowUp className="w-4 h-4 text-green-600" />
+                    <ArrowUp className="w-4 h-4 text-gray-700" />
                   ) : (
-                    <ArrowDown className="w-4 h-4 text-red-600" />
+                    <ArrowDown className="w-4 h-4 text-gray-700" />
                   )}
-                  <span className={`font-medium ${stat.isIncrease ? 'text-green-600' : 'text-red-600'}`}>
+                  <span className={`font-medium ${stat.isIncrease ? 'text-gray-700' : 'text-gray-700'}`}>
                     {stat.change}
                   </span>
                   <span className="text-xs text-gray-500">so với tháng trước</span>
@@ -206,17 +206,17 @@ const AdminDashboard = () => {
                 <Line
                   type="monotone"
                   dataKey="users"
-                  stroke="#3b82f6"
+                  stroke="#374151"
                   strokeWidth={2}
-                  dot={{ fill: '#3b82f6', r: 4 }}
+                  dot={{ fill: '#374151', r: 4 }}
                   name="Tổng người dùng"
                 />
                 <Line
                   type="monotone"
                   dataKey="active"
-                  stroke="#10b981"
+                  stroke="#6b7280"
                   strokeWidth={2}
-                  dot={{ fill: '#10b981', r: 4 }}
+                  dot={{ fill: '#6b7280', r: 4 }}
                   name="Người dùng hoạt động"
                 />
               </LineChart>
@@ -331,8 +331,8 @@ const AdminDashboard = () => {
                 }}
               />
               <Legend wrapperStyle={{ fontSize: '12px' }} />
-              <Bar dataKey="completed" fill="#3b82f6" radius={[8, 8, 0, 0]} name="Hoàn thành" />
-              <Bar dataKey="inProgress" fill="#8b5cf6" radius={[8, 8, 0, 0]} name="Đang tiến hành" />
+              <Bar dataKey="completed" fill="#374151" radius={[8, 8, 0, 0]} name="Hoàn thành" />
+              <Bar dataKey="inProgress" fill="#6b7280" radius={[8, 8, 0, 0]} name="Đang tiến hành" />
             </BarChart>
           )}
         </ChartWrapper>
@@ -350,13 +350,13 @@ const AdminDashboard = () => {
             <h2 className="text-base font-semibold text-gray-900">Hoạt động gần đây</h2>
             <p className="text-xs text-gray-600">Hành động và thành tựu gần đây của người dùng</p>
           </div>
-          <button className="text-xs text-blue-600 hover:text-blue-700 font-medium">Xem tất cả</button>
+          <button className="text-xs text-gray-800 hover:text-gray-900 font-medium">Xem tất cả</button>
         </div>
         <div className="space-y-3"> {/* space-y-4 -> space-y-3 */}
           {recentActivities.map((activity) => (
             <div key={activity.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-semibold text-sm">
                   {activity.user.charAt(0)}
                 </div>
                 <div>

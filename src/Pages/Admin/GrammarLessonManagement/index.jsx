@@ -212,8 +212,8 @@ const GrammarLessonManagement = () => {
               className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
             >
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <BookOpen className="w-6 h-6 text-blue-600" />
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <BookOpen className="w-6 h-6 text-gray-700" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900">{topic.name}</h3>
@@ -265,7 +265,7 @@ const GrammarLessonManagement = () => {
           </button>
           <button
             onClick={openAddModal}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Thêm bài học
@@ -281,76 +281,78 @@ const GrammarLessonManagement = () => {
           placeholder="Tìm kiếm bài học..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-700"
         />
       </div>
 
-      {/* Lessons Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Tiêu đề</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Nội dung</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">XP</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Câu hỏi</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Trạng thái</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">Hành động</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {filteredLessons.map((lesson) => (
-              <tr key={lesson.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
-                  <div className="font-medium text-gray-900">{lesson.title}</div>
-                </td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => setViewContentLesson(lesson)}
-                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Xem nội dung
-                  </button>
-                </td>
-                <td className="px-6 py-4 text-sm">{lesson.xpReward} XP</td>
-                <td className="px-6 py-4 text-sm">{lesson.totalQuestions || 0}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    lesson.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {lesson.isActive ? 'Hoạt động' : 'Đã xóa'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => openEditModal(lesson)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                      title="Sửa"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteRestore(lesson.id, lesson.isActive)}
-                      className={`p-2 rounded ${
-                        lesson.isActive 
-                          ? 'text-red-600 hover:bg-red-50' 
-                          : 'text-green-600 hover:bg-green-50'
-                      }`}
-                      title={lesson.isActive ? 'Xóa' : 'Khôi phục'}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
+      {/* Lessons Table (Excel style) */}
+      <div className="bg-white border-2 border-gray-300 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-300">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Tiêu đề</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Nội dung</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">XP</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Câu hỏi</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Trạng thái</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Hành động</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-300">
+              {filteredLessons.map((lesson) => (
+                <tr key={lesson.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 border-r border-gray-300">
+                    <div className="font-medium text-gray-900 text-sm">{lesson.title}</div>
+                  </td>
+                  <td className="px-4 py-3 border-r border-gray-300">
+                    <button
+                      onClick={() => setViewContentLesson(lesson)}
+                      className="text-gray-700 hover:text-gray-900 flex items-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span className="text-sm">Xem nội dung</span>
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-sm border-r border-gray-300">{lesson.xpReward} XP</td>
+                  <td className="px-4 py-3 text-sm border-r border-gray-300">{lesson.totalQuestions || 0}</td>
+                  <td className="px-4 py-3 text-center border-r border-gray-300">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      lesson.isActive ? 'bg-gray-200 text-gray-800' : 'bg-gray-300 text-gray-700'
+                    }`}>
+                      {lesson.isActive ? 'Hoạt động' : 'Đã xóa'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => openEditModal(lesson)}
+                        className="p-1.5 text-gray-700 hover:bg-gray-100 rounded"
+                        title="Sửa"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRestore(lesson.id, lesson.isActive)}
+                        className={`p-1.5 rounded ${
+                          lesson.isActive 
+                            ? 'text-gray-700 hover:bg-gray-200' 
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                        title={lesson.isActive ? 'Xóa' : 'Khôi phục'}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination */}
-        <div className="bg-gray-50 px-6 py-3 border-t flex justify-between items-center">
+        <div className="px-4 py-3 bg-gray-50 border-t border-gray-300 flex justify-between items-center">
           <span className="text-sm text-gray-600">
             Hiển thị {filteredLessons.length} / {totalElements}
           </span>
@@ -358,15 +360,15 @@ const GrammarLessonManagement = () => {
             <button
               onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
               disabled={currentPage === 0 || loading}
-              className="px-3 py-1 border rounded disabled:opacity-50"
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Trước
             </button>
-            <span className="px-3 py-1">Trang {currentPage + 1} / {totalPages || 1}</span>
+            <span className="px-3 py-1.5 text-sm text-gray-700">Trang {currentPage + 1} / {totalPages || 1}</span>
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
               disabled={currentPage >= totalPages - 1 || loading}
-              className="px-3 py-1 border rounded disabled:opacity-50"
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Sau
             </button>
@@ -394,7 +396,7 @@ const GrammarLessonManagement = () => {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                   placeholder="VD: Present Simple Tense"
                   required
                 />
@@ -409,7 +411,7 @@ const GrammarLessonManagement = () => {
                       onClick={() => setPreviewMode(false)}
                       className={`px-3 py-1 text-xs rounded ${
                         !previewMode 
-                          ? 'bg-blue-600 text-white' 
+                          ? 'bg-gray-800 text-white' 
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -420,7 +422,7 @@ const GrammarLessonManagement = () => {
                       onClick={() => setPreviewMode(true)}
                       className={`px-3 py-1 text-xs rounded ${
                         previewMode 
-                          ? 'bg-blue-600 text-white' 
+                          ? 'bg-gray-800 text-white' 
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -433,7 +435,7 @@ const GrammarLessonManagement = () => {
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700 font-mono text-sm"
                     rows={12}
                     placeholder="Nhập nội dung HTML..."
                     required
@@ -454,7 +456,7 @@ const GrammarLessonManagement = () => {
                   type="number"
                   value={formData.xpReward}
                   onChange={(e) => setFormData({ ...formData, xpReward: parseInt(e.target.value) || 100 })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                   min="1"
                 />
               </div>
@@ -479,7 +481,7 @@ const GrammarLessonManagement = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                  className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {modalMode === 'add' ? 'Thêm' : 'Lưu'}

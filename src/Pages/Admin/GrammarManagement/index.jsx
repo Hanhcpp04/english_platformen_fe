@@ -7,7 +7,6 @@ import {
   BookOpen,
   CheckCircle,
   XCircle,
-  X,
   Save,
   FileText,
   Target,
@@ -17,6 +16,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import * as adminService from '../../../service/adminService';
+import AdminModal from '../../../components/OtherComponents/AdminModal';
+import AdminModalFooter from '../../../components/OtherComponents/AdminModalFooter';
 
 const GrammarManagement = () => {
   const [topics, setTopics] = useState([]);
@@ -171,93 +172,79 @@ const GrammarManagement = () => {
   };
 
   const TopicModal = () => (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-        <div className="border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {modalMode === 'add' ? 'Thêm chủ đề ngữ pháp' : 'Chỉnh sửa chủ đề'}
-          </h2>
-          <button
-            onClick={() => setShowModal(false)}
-            className="p-2 hover:bg-gray-100 rounded transition-colors"
-          >
-            <X className="w-4 h-4 text-gray-500" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-4 space-y-3">
+    <AdminModal
+      isOpen={showModal}
+      onClose={() => setShowModal(false)}
+      title={modalMode === 'add' ? 'Thêm chủ đề ngữ pháp' : 'Chỉnh sửa chủ đề'}
+      size="lg"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-zinc-700 mb-2">
               Tên chủ đề <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-zinc-900"
               placeholder="VD: Present Tenses"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+            <label className="block text-sm font-medium text-zinc-700 mb-2">Mô tả</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-zinc-900 resize-none"
               placeholder="Mô tả ngắn về chủ đề..."
-              rows={3}
+              rows={4}
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">XP thưởng</label>
-            <input
-              type="number"
-              value={formData.xpReward}
-              onChange={(e) => setFormData({ ...formData, xpReward: parseInt(e.target.value) || 100 })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-              min="1"
-            />
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-2">XP thưởng</label>
+              <input
+                type="number"
+                value={formData.xpReward}
+                onChange={(e) => setFormData({ ...formData, xpReward: parseInt(e.target.value) || 100 })}
+                className="w-full px-4 py-2.5 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-zinc-900"
+                min="1"
+              />
+            </div>
 
-          <label className="inline-flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={formData.isActive}
-              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-              className="w-4 h-4"
-            />
-            Kích hoạt
-          </label>
-
-          <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 mt-2">
-            <button
-              type="button"
-              onClick={() => setShowModal(false)}
-              className="px-3 py-1.5 rounded-md border text-sm"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="px-3 py-1.5 rounded-md bg-blue-600 text-white text-sm flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              {modalMode === 'add' ? 'Thêm' : 'Lưu'}
-            </button>
+            <div className="flex items-end">
+              <label className="inline-flex items-center gap-3 text-sm text-zinc-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  className="w-5 h-5 rounded border-zinc-300 text-zinc-900 focus:ring-2 focus:ring-zinc-900"
+                />
+                <span className="font-medium">Kích hoạt ngay</span>
+              </label>
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <AdminModalFooter
+          onCancel={() => setShowModal(false)}
+          submitText={modalMode === 'add' ? 'Thêm chủ đề' : 'Cập nhật'}
+          submitIcon={<Save className="w-4 h-4" />}
+        />
+      </form>
+    </AdminModal>
   );
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-56 bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-700 mx-auto mb-3"></div>
           <p className="text-sm text-gray-600">Đang tải...</p>
         </div>
       </div>
@@ -265,51 +252,42 @@ const GrammarManagement = () => {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header + Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Quản lý Ngữ pháp</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Quản lý chủ đề, bài học và bài tập ngữ pháp</p>
+    <div className="space-y-6">
+      {/* Page Title */}
+      <div>
+        <h1 className="text-2xl font-semibold text-zinc-900">Quản lý Ngữ pháp</h1>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-4">
+        {/* Search Input */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Tìm kiếm bài học..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-900 text-zinc-900 placeholder-zinc-400"
+          />
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Tìm chủ đề..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md w-56 focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-
-          <button
-            onClick={fetchTopics}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Làm mới
-          </button>
-
-          <button
-            onClick={handleAddTopic}
-            className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4" />
-            Thêm chủ đề
-          </button>
-        </div>
+        {/* Add Button */}
+        <button
+          onClick={handleAddTopic}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-md text-sm hover:bg-zinc-800 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Thêm chủ đề
+        </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <BookOpen className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-gray-100 rounded-lg">
+              <BookOpen className="w-5 h-5 text-gray-700" />
             </div>
             <div>
               <div className="text-xs text-gray-500">Tổng chủ đề</div>
@@ -319,8 +297,8 @@ const GrammarManagement = () => {
         </div>
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-50 rounded-lg">
-              <FileText className="w-5 h-5 text-green-600" />
+            <div className="p-2 bg-gray-100 rounded-lg">
+              <FileText className="w-5 h-5 text-gray-700" />
             </div>
             <div>
               <div className="text-xs text-gray-500">Tổng bài học</div>
@@ -332,8 +310,8 @@ const GrammarManagement = () => {
         </div>
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <Target className="w-5 h-5 text-purple-600" />
+            <div className="p-2 bg-gray-100 rounded-lg">
+              <Target className="w-5 h-5 text-gray-700" />
             </div>
             <div>
               <div className="text-xs text-gray-500">Tổng bài tập</div>
@@ -366,7 +344,7 @@ const GrammarManagement = () => {
                     <div className="flex items-center gap-2">
                       <h3 className="text-base font-semibold text-gray-900">{topic.name}</h3>
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
-                        topic.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        topic.isActive ? 'bg-gray-200 text-gray-800' : 'bg-gray-300 text-gray-700'
                       }`}>
                         {topic.isActive ? <><CheckCircle className="w-3 h-3" /> Hoạt động</> : <><XCircle className="w-3 h-3" /> Tạm dừng</>}
                       </span>
@@ -393,21 +371,21 @@ const GrammarManagement = () => {
                   <button
                     onClick={() => handleToggleActive(topic.id, topic.isActive)}
                     className={`px-3 py-1 rounded-md text-xs ${
-                      topic.isActive ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700'
+                      topic.isActive ? 'bg-gray-200 text-gray-700' : 'bg-gray-300 text-gray-800'
                     }`}
                   >
                     {topic.isActive ? 'Tạm dừng' : 'Kích hoạt'}
                   </button>
                   <button
                     onClick={() => handleEditTopic(topic)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-md"
+                    className="p-2 text-gray-700 hover:bg-gray-100 rounded-md"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteTopic(topic.id, topic.isActive)}
                     className={`p-2 rounded-md ${
-                      topic.isActive ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'
+                      topic.isActive ? 'text-gray-700 hover:bg-gray-200' : 'text-gray-600 hover:bg-gray-100'
                     }`}
                     title={topic.isActive ? 'Xóa' : 'Khôi phục'}
                   >
@@ -428,17 +406,17 @@ const GrammarManagement = () => {
                           <span className="text-sm text-gray-900">{lesson.title}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <button className="p-1 text-blue-600 hover:bg-blue-100 rounded">
+                          <button className="p-1 text-gray-700 hover:bg-gray-100 rounded">
                             <Edit2 className="w-3 h-3" />
                           </button>
-                          <button className="p-1 text-red-600 hover:bg-red-100 rounded">
+                          <button className="p-1 text-gray-700 hover:bg-gray-200 rounded">
                             <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <button className="mt-2 text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                  <button className="mt-2 text-xs text-gray-700 hover:text-gray-900 flex items-center gap-1">
                     <Plus className="w-3 h-3" />
                     Thêm bài học
                   </button>
@@ -460,7 +438,7 @@ const GrammarManagement = () => {
           {!searchTerm && (
             <button
               onClick={handleAddTopic}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-md text-sm"
             >
               <Plus className="w-4 h-4" />
               Thêm chủ đề

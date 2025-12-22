@@ -7,7 +7,7 @@ const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-zinc-50">
       {/* Sidebar */}
       <AdminSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       
@@ -17,8 +17,8 @@ const AdminLayout = ({ children }) => {
         <AdminHeader toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 overflow-y-auto bg-zinc-50 p-8">
+          <div className="max-w-full">
             {children}
           </div>
         </main>

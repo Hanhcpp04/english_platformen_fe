@@ -118,7 +118,7 @@ const UserManagement = () => {
               placeholder="Tìm tên, email, tài khoản..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md w-64 focus:ring-1 focus:ring-blue-500"
+              className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md w-64 focus:ring-1 focus:ring-gray-700"
             />
           </div>
 
@@ -127,7 +127,7 @@ const UserManagement = () => {
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500"
+              className="px-3 py-2 text-sm border border-gray-200 rounded-md focus:ring-1 focus:ring-gray-700"
             >
               <option value="all">Tất cả vai trò</option>
               <option value="USER">Người dùng</option>
@@ -135,17 +135,14 @@ const UserManagement = () => {
             </select>
           </div>
 
-          <button className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-md hover:bg-gray-50">
-            <Download className="w-4 h-4" />
-            Xuất
-          </button>
+          {/* Export button removed as requested */}
         </div>
       </div>
 
       {/* Compact Stats (single row, small cards) */}
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {stats.map((stat, index) => (
-          <div key={index} className="flex items-center gap-3 bg-white border border-gray-200 rounded-md px-3 py-2 min-w-[180px]">
+          <div key={index} className="flex items-center gap-3 bg-white border border-gray-200 rounded-md px-3 py-2">
             <div className={`p-2 rounded-md bg-${stat.color}-50`}>
               <stat.icon className={`w-5 h-5 text-${stat.color}-600`} />
             </div>
@@ -157,84 +154,101 @@ const UserManagement = () => {
         ))}
       </div>
 
-      {/* Users Table (compact) */}
-      <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+      {/* Users Table - Excel Style */}
+      <div className="bg-white rounded-md border border-gray-300 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
+          <table className="w-full text-xs border-collapse">
+            <thead className="bg-gray-100">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Người dùng</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Vai trò</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Cấp / XP</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Trạng thái</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Hoạt động</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Hành động</th>
+                <th className="px-1 py-1 text-center text-[11px] leading-none font-semibold text-gray-700 border border-gray-300 w-12">STT</th>
+                <th className="px-2 py-1 text-center text-xs font-semibold text-gray-700 border border-gray-300 w-20">Avatar</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold text-gray-700 border border-gray-300 min-w-[150px]">Họ tên</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold text-gray-700 border border-gray-300 min-w-[180px]">Email</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold text-gray-700 border border-gray-300 w-32">Tên đăng nhập</th>
+                <th className="px-2 py-1 text-center text-xs font-semibold text-gray-700 border border-gray-300 w-28">Vai trò</th>
+                <th className="px-2 py-1 text-center text-xs font-semibold text-gray-700 border border-gray-300 w-20">Cấp độ</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold text-gray-700 border border-gray-300 w-24">Level Name</th>
+                <th className="px-2 py-1 text-right text-xs font-semibold text-gray-700 border border-gray-300 w-24">Tổng XP</th>
+                <th className="px-2 py-1 text-center text-xs font-semibold text-gray-700 border border-gray-300 w-28">Trạng thái</th>
+                <th className="px-2 py-1 text-center text-xs font-semibold text-gray-700 border border-gray-300 w-32">Ngày tham gia</th>
+                <th className="px-2 py-1 text-center text-xs font-semibold text-gray-700 border border-gray-300 w-32">Hành động</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2">
-                    <div className="flex items-center gap-3">
-                      {user.avatar ? (
-                        <img 
-                          src={user.avatar} 
-                          alt={user.fullname || user.username}
-                          className="w-8 h-8 rounded-full object-cover"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="32" height="32"%3E%3Crect width="32" height="32" fill="%233b82f6"/%3E%3Ctext x="50%25" y="50%25" fill="white" font-size="16" text-anchor="middle" dy=".3em"%3E' + (user.fullname?.charAt(0) || user.username?.charAt(0) || '?') + '%3C/text%3E%3C/svg%3E';
-                          }}
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
-                          {user.fullname?.charAt(0) || user.username?.charAt(0) || '?'}
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate">{user.fullname || user.username}</div>
-                        <div className="text-xs text-gray-500 truncate">{user.email}</div>
-                      </div>
-                    </div>
+            <tbody>
+              {filteredUsers.map((user, index) => (
+                <tr key={user.id} className="hover:bg-gray-100">
+                  <td className="px-1 py-0.5 text-center text-[11px] leading-none text-gray-700 border border-gray-300">
+                    {currentPage * pageSize + index + 1}
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-2 py-1 text-center border border-gray-300">
+                    {user.avatar ? (
+                      <img 
+                        src={user.avatar} 
+                        alt={user.fullname || user.username}
+                        className="w-10 h-10 rounded-full object-cover mx-auto"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Crect width="40" height="40" fill="%233b82f6"/%3E%3Ctext x="50%25" y="50%25" fill="white" font-size="18" text-anchor="middle" dy=".3em"%3E' + (user.fullname?.charAt(0) || user.username?.charAt(0) || '?') + '%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white text-sm font-medium mx-auto">
+                        {user.fullname?.charAt(0) || user.username?.charAt(0) || '?'}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-2 py-1 text-xs text-gray-900 border border-gray-300">
+                    {user.fullname || '-'}
+                  </td>
+                  <td className="px-2 py-1 text-xs text-gray-700 border border-gray-300">
+                    {user.email}
+                  </td>
+                  <td className="px-2 py-1 text-xs text-gray-700 border border-gray-300">
+                    {user.username}
+                  </td>
+                  <td className="px-2 py-1 text-center border border-gray-300">
                     <select
                       value={user.role}
                       onChange={(e) => handleUpdateRole(user.id, e.target.value)}
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border-0 ${
-                        user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                      className={`w-full px-2 py-1 rounded text-xs font-medium ${
+                        user.role === 'ADMIN' ? 'bg-gray-300 text-gray-800' : 'bg-gray-200 text-gray-800'
                       }`}
                     >
-                      <option value="USER">Người dùng</option>
-                      <option value="ADMIN">Quản trị</option>
+                      <option value="USER">USER</option>
+                      <option value="ADMIN">ADMIN</option>
                     </select>
                   </td>
-                  <td className="px-4 py-2">
-                    <div className="text-sm text-gray-900">Cấp {user.levelNumber || 1}</div>
-                    <div className="text-xs text-gray-500">{user.levelName || 'Newbie'}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">{(user.totalXp || 0).toLocaleString()} XP</div>
+                  <td className="px-2 py-1 text-center text-xs font-medium text-gray-900 border border-gray-300">
+                    {user.levelNumber || 1}
                   </td>
-                  <td className="px-4 py-2">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs ${
-                      user.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                  <td className="px-2 py-1 text-xs text-gray-700 border border-gray-300">
+                    {user.levelName || 'Newbie'}
+                  </td>
+                  <td className="px-2 py-1 text-right text-xs font-medium text-gray-700 border border-gray-300">
+                    {(user.totalXp || 0).toLocaleString()}
+                  </td>
+                  <td className="px-2 py-1 text-center border border-gray-300">
+                    <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                      user.isActive ? 'bg-gray-200 text-gray-800' : 'bg-gray-100 text-gray-800'
                     }`}>
                       {user.isActive ? 'Hoạt động' : 'Không hoạt động'}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-xs text-gray-500">
+                  <td className="px-2 py-1 text-center text-xs text-gray-700 border border-gray-300">
                     {user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : '-'}
                   </td>
-                  <td className="px-4 py-2">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleToggleActive(user.id, user.isActive)}
-                        className={`px-2 py-1 text-xs rounded ${user.isActive ? 'bg-red-100 text-red-800 hover:bg-red-200' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}
-                        title={user.isActive ? 'Vô hiệu hóa' : 'Khôi phục'}
-                        disabled={loading}
-                      >
-                        {user.isActive ? 'Vô hiệu hóa' : 'Khôi phục'}
-                      </button>
-                    </div>
+                  <td className="px-2 py-1 text-center border border-gray-300">
+                    <button
+                      onClick={() => handleToggleActive(user.id, user.isActive)}
+                      className={`w-full px-2 py-1 text-xs font-medium rounded ${
+                        user.isActive 
+                          ? 'bg-gray-300 text-gray-800 hover:bg-gray-400' 
+                          : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                      }`}
+                      disabled={loading}
+                    >
+                      {user.isActive ? 'Vô hiệu hóa' : 'Khôi phục'}
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -242,7 +256,7 @@ const UserManagement = () => {
           </table>
         </div>
 
-        {/* Pagination (compact) */}
+        {/* Pagination */}
         <div className="bg-gray-50 px-4 py-2 border-t border-gray-100 flex items-center justify-between text-sm">
           <div className="text-gray-600">
             Hiển thị <span className="font-medium text-gray-900">{filteredUsers.length}</span> / <span className="font-medium">{totalElements}</span>

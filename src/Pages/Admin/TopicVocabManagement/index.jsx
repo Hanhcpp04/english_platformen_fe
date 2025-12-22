@@ -49,7 +49,7 @@ const TopicVocabManagement = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(12);
   const [formData, setFormData] = useState({
     englishName: '',
     name: '',
@@ -208,7 +208,7 @@ const TopicVocabManagement = () => {
           </button>
           <button
             onClick={openAddModal}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Thêm chủ đề
@@ -224,99 +224,59 @@ const TopicVocabManagement = () => {
           placeholder="Tìm kiếm chủ đề..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-700"
         />
       </div>
 
-      {/* Topics Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Icon</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Tên tiếng Anh</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Tên tiếng Việt</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Mô tả</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Số từ</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">XP</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Trạng thái</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">Hành động</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {filteredTopics.map((topic) => (
-              <tr key={topic.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
-                  <div className="text-3xl">{topic.iconUrl || '📚'}</div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="font-medium text-gray-900">{topic.englishName}</span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="text-sm text-gray-600">{topic.name}</span>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">{topic.description}</td>
-                <td className="px-6 py-4">
-                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                    {topic.totalWords || 0} từ
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm">{topic.xpReward} XP</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    topic.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {topic.isActive ? 'Hoạt động' : 'Đã xóa'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => openEditModal(topic)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                      title="Sửa"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteRestore(topic.id, topic.isActive)}
-                      className={`p-2 rounded ${
-                        topic.isActive 
-                          ? 'text-red-600 hover:bg-red-50' 
-                          : 'text-green-600 hover:bg-green-50'
-                      }`}
-                      title={topic.isActive ? 'Xóa' : 'Khôi phục'}
-                    >
-                      {topic.isActive ? <Trash2 className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </td>
+      {/* Topics Table (Excel style) */}
+      <div className="bg-white rounded-md border border-gray-300 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-2 py-2 text-center text-xs font-semibold text-gray-700 border border-gray-300 w-12">STT</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300 min-w-[80px]">Icon</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300 min-w-[160px]">Tên tiếng Anh</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300 min-w-[140px]">Tên tiếng Việt</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300">Mô tả</th>
+                <th className="px-3 py-2 text-center text-xs font-semibold text-gray-700 border border-gray-300 w-24">Số từ</th>
+                <th className="px-3 py-2 text-center text-xs font-semibold text-gray-700 border border-gray-300 w-20">XP</th>
+                <th className="px-3 py-2 text-center text-xs font-semibold text-gray-700 border border-gray-300 w-28">Trạng thái</th>
+                <th className="px-3 py-2 text-center text-xs font-semibold text-gray-700 border border-gray-300 w-28">Hành động</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredTopics.map((topic, index) => (
+                <tr key={topic.id} className="hover:bg-gray-100">
+                  <td className="px-2 py-1 text-center text-xs text-gray-700 border border-gray-300">{currentPage * pageSize + index + 1}</td>
+                  <td className="px-3 py-1 text-left border border-gray-300">{topic.iconUrl || '📚'}</td>
+                  <td className="px-3 py-1 text-sm text-gray-900 border border-gray-300">{topic.englishName}</td>
+                  <td className="px-3 py-1 text-sm text-gray-700 border border-gray-300">{topic.name}</td>
+                  <td className="px-3 py-1 text-xs text-gray-600 border border-gray-300 max-w-xl truncate">{topic.description}</td>
+                  <td className="px-3 py-1 text-center text-xs border border-gray-300">{topic.totalWords || 0}</td>
+                  <td className="px-3 py-1 text-center text-xs border border-gray-300">{topic.xpReward} XP</td>
+                  <td className="px-3 py-1 text-center border border-gray-300">
+                    <span className={`inline-block px-2 py-0.5 rounded text-xs ${topic.isActive ? 'bg-gray-200 text-gray-800' : 'bg-gray-300 text-gray-700'}`}>{topic.isActive ? 'Hoạt động' : 'Đã xóa'}</span>
+                  </td>
+                  <td className="px-3 py-1 text-center border border-gray-300">
+                    <div className="flex items-center justify-center gap-2">
+                      <button onClick={() => openEditModal(topic)} className="p-1 text-gray-700 hover:bg-gray-100 rounded" title="Sửa"><Edit2 className="w-4 h-4"/></button>
+                      <button onClick={() => handleDeleteRestore(topic.id, topic.isActive)} className={`p-1 rounded ${topic.isActive ? 'text-gray-700 hover:bg-gray-200' : 'text-gray-600 hover:bg-gray-100'}`} title={topic.isActive ? 'Xóa' : 'Khôi phục'}>{topic.isActive ? <Trash2 className="w-4 h-4"/> : <CheckCircle className="w-4 h-4"/>}</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination */}
-        <div className="bg-gray-50 px-6 py-3 border-t flex justify-between items-center">
-          <span className="text-sm text-gray-600">
-            Hiển thị {filteredTopics.length} / {totalElements}
-          </span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-              disabled={currentPage === 0 || loading}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              Trước
-            </button>
-            <span className="px-3 py-1">Trang {currentPage + 1} / {totalPages || 1}</span>
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-              disabled={currentPage >= totalPages - 1 || loading}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              Sau
-            </button>
+        <div className="bg-gray-50 px-4 py-2 border-t flex items-center justify-between text-sm">
+          <div className="text-gray-600">Hiển thị <span className="font-medium text-gray-900">{filteredTopics.length}</span> / <span className="font-medium">{totalElements}</span></div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0 || loading} className="px-2 py-1 text-sm border border-gray-200 rounded hover:bg-gray-100 disabled:opacity-50">Trước</button>
+            <span className="px-3 py-1 text-sm">Trang {currentPage + 1} / {totalPages || 1}</span>
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1 || loading} className="px-2 py-1 text-sm border border-gray-200 rounded hover:bg-gray-100 disabled:opacity-50">Tiếp</button>
           </div>
         </div>
       </div>
@@ -341,7 +301,7 @@ const TopicVocabManagement = () => {
                   type="text"
                   value={formData.englishName}
                   onChange={(e) => setFormData({ ...formData, englishName: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                   placeholder="VD: Food, Travel, Technology..."
                   required
                 />
@@ -353,7 +313,7 @@ const TopicVocabManagement = () => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                   placeholder="VD: Ẩm thực, Du lịch, Công nghệ..."
                   required
                 />
@@ -364,7 +324,7 @@ const TopicVocabManagement = () => {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                   rows={3}
                   placeholder="Mô tả ngắn gọn về chủ đề..."
                 />
@@ -378,8 +338,8 @@ const TopicVocabManagement = () => {
                       key={iconOpt.name}
                       type="button"
                       onClick={() => setFormData({ ...formData, icon: iconOpt.emoji })}
-                      className={`p-3 text-2xl border-2 rounded-lg hover:border-blue-500 transition-colors ${
-                        formData.icon === iconOpt.emoji ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                      className={`p-3 text-2xl border-2 rounded-lg hover:border-gray-700 transition-colors ${
+                        formData.icon === iconOpt.emoji ? 'border-gray-700 bg-gray-100' : 'border-gray-200'
                       }`}
                       title={iconOpt.label}
                     >
@@ -399,7 +359,7 @@ const TopicVocabManagement = () => {
                   type="number"
                   value={formData.xpReward}
                   onChange={(e) => setFormData({ ...formData, xpReward: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700"
                   min="0"
                 />
               </div>
@@ -414,7 +374,7 @@ const TopicVocabManagement = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                  className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {modalMode === 'add' ? 'Thêm' : 'Lưu'}

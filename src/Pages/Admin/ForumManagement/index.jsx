@@ -185,7 +185,7 @@ const ForumManagement = () => {
               onClick={() => { setActiveTab('posts'); setCurrentPage(0); }}
               className={`px-6 py-3 font-medium flex items-center gap-2 ${
                 activeTab === 'posts'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  ? 'border-b-2 border-gray-800 text-gray-800'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -196,7 +196,7 @@ const ForumManagement = () => {
               onClick={() => { setActiveTab('comments'); setCurrentPage(0); }}
               className={`px-6 py-3 font-medium flex items-center gap-2 ${
                 activeTab === 'comments'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  ? 'border-b-2 border-gray-800 text-gray-800'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -207,7 +207,7 @@ const ForumManagement = () => {
               onClick={() => { setActiveTab('statistics'); setCurrentPage(0); }}
               className={`px-6 py-3 font-medium flex items-center gap-2 ${
                 activeTab === 'statistics'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  ? 'border-b-2 border-gray-800 text-gray-800'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -230,7 +230,7 @@ const ForumManagement = () => {
                   setSearchQuery(e.target.value);
                   setCurrentPage(0);
                 }}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-700"
               />
             </div>
             <select
@@ -239,7 +239,7 @@ const ForumManagement = () => {
                 setStatusFilter(e.target.value);
                 setCurrentPage(0);
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-700"
             >
               <option value="all">Tất cả</option>
               <option value="active">Đang hoạt động</option>
@@ -258,115 +258,119 @@ const ForumManagement = () => {
                 <div className="text-center py-8 text-gray-500">Không có bài viết nào</div>
               ) : (
                 <>
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Tiêu đề</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Tác giả</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Thống kê</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Ngày tạo</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Trạng thái</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Hành động</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {posts.map((post) => (
-                        <tr key={post.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3">
-                            <button
-                              onClick={() => {
-                                setSelectedPost(post);
-                                setShowDetailModal(true);
-                              }}
-                              className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-left"
-                            >
-                              <Eye className="w-4 h-4" />
-                              <span className="line-clamp-2 font-medium">{post.title}</span>
-                            </button>
-                            {post.tags && post.tags.length > 0 && (
-                              <div className="flex gap-1 mt-1 flex-wrap">
-                                {post.tags.slice(0, 3).map((tag, idx) => (
-                                  <span key={idx} className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
-                                    {tag}
+                  <div className="bg-white border-2 border-gray-300 rounded-lg overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-300">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Tiêu đề</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Tác giả</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Thống kê</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Ngày tạo</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Trạng thái</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Hành động</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {posts.map((post) => (
+                            <tr key={post.id} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 border-r border-gray-300">
+                                <button
+                                  onClick={() => {
+                                    setSelectedPost(post);
+                                    setShowDetailModal(true);
+                                  }}
+                                  className="text-gray-700 hover:text-gray-900 flex items-center gap-1 text-left"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                  <span className="line-clamp-2 font-medium text-sm">{post.title}</span>
+                                </button>
+                                {post.tags && post.tags.length > 0 && (
+                                  <div className="flex gap-1 mt-1 flex-wrap">
+                                    {post.tags.slice(0, 3).map((tag, idx) => (
+                                      <span key={idx} className="px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded">
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 border-r border-gray-300">
+                                <div className="flex items-center gap-2">
+                                  <User className="w-4 h-4 text-gray-400" />
+                                  <div>
+                                    <div className="text-sm font-medium">{post.userFullname}</div>
+                                    <div className="text-xs text-gray-500">@{post.username}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 border-r border-gray-300">
+                                <div className="flex gap-3 text-xs text-gray-600">
+                                  <span className="flex items-center gap-1">
+                                    <Eye className="w-3 h-3" />
+                                    {post.viewCount || 0}
                                   </span>
-                                ))}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-gray-400" />
-                              <div>
-                                <div className="text-sm font-medium">{post.userFullname}</div>
-                                <div className="text-xs text-gray-500">@{post.username}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex gap-3 text-xs text-gray-600">
-                              <span className="flex items-center gap-1">
-                                <Eye className="w-3 h-3" />
-                                {post.viewCount || 0}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <ThumbsUp className="w-3 h-3" />
-                                {post.likesCount || 0}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <MessageSquare className="w-3 h-3" />
-                                {post.commentsCount || 0}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {formatDate(post.createdAt)}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              post.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              {post.isActive ? 'Hoạt động' : 'Đã xóa'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <button
-                              onClick={() => handleDeleteRestorePost(post.id, post.isActive)}
-                              className={`p-2 rounded ${
-                                post.isActive 
-                                  ? 'text-red-600 hover:bg-red-50' 
-                                  : 'text-green-600 hover:bg-green-50'
-                              }`}
-                              title={post.isActive ? 'Xóa' : 'Khôi phục'}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                                  <span className="flex items-center gap-1">
+                                    <ThumbsUp className="w-3 h-3" />
+                                    {post.likesCount || 0}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <MessageSquare className="w-3 h-3" />
+                                    {post.commentsCount || 0}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-300">
+                                {formatDate(post.createdAt)}
+                              </td>
+                              <td className="px-4 py-3 text-center border-r border-gray-300">
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                  post.isActive ? 'bg-gray-200 text-gray-800' : 'bg-gray-300 text-gray-700'
+                                }`}>
+                                  {post.isActive ? 'Hoạt động' : 'Đã xóa'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <button
+                                  onClick={() => handleDeleteRestorePost(post.id, post.isActive)}
+                                  className={`p-1.5 rounded transition-colors ${
+                                    post.isActive 
+                                      ? 'text-gray-700 hover:bg-gray-200' 
+                                      : 'text-gray-600 hover:bg-gray-100'
+                                  }`}
+                                  title={post.isActive ? 'Xóa' : 'Khôi phục'}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
 
-                  {/* Pagination */}
-                  <div className="mt-4 flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
-                      Hiển thị {posts.length} / {totalElements}
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                        disabled={currentPage === 0 || loading}
-                        className="px-3 py-1 border rounded disabled:opacity-50"
-                      >
-                        Trước
-                      </button>
-                      <span className="px-3 py-1">Trang {currentPage + 1} / {totalPages || 1}</span>
-                      <button
-                        onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-                        disabled={currentPage >= totalPages - 1 || loading}
-                        className="px-3 py-1 border rounded disabled:opacity-50"
-                      >
-                        Sau
-                      </button>
+                    {/* Pagination */}
+                    <div className="px-4 py-3 bg-gray-50 border-t border-gray-300 flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        Hiển thị {posts.length} / {totalElements}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                          disabled={currentPage === 0 || loading}
+                          className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Trước
+                        </button>
+                        <span className="px-3 py-1.5 text-sm text-gray-700">Trang {currentPage + 1} / {totalPages || 1}</span>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                          disabled={currentPage >= totalPages - 1 || loading}
+                          className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Sau
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </>
@@ -382,93 +386,97 @@ const ForumManagement = () => {
                 <div className="text-center py-8 text-gray-500">Không có bình luận nào</div>
               ) : (
                 <>
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Nội dung</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Bài viết</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Tác giả</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Thống kê</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Trạng thái</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Hành động</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {comments.map((comment) => (
-                        <tr key={comment.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3">
-                            <p className="text-sm line-clamp-2">{truncateText(comment.content, 150)}</p>
-                          </td>
-                          <td className="px-4 py-3">
-                            <p className="text-sm text-gray-600 line-clamp-1">{comment.postTitle}</p>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-gray-400" />
-                              <div>
-                                <div className="text-sm font-medium">{comment.userFullname}</div>
-                                <div className="text-xs text-gray-500">@{comment.username}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex gap-3 text-xs text-gray-600">
-                              <span className="flex items-center gap-1">
-                                <ThumbsUp className="w-3 h-3" />
-                                {comment.likesCount || 0}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <MessageSquare className="w-3 h-3" />
-                                {comment.repliesCount || 0} trả lời
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              comment.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              {comment.isActive ? 'Hoạt động' : 'Đã xóa'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <button
-                              onClick={() => handleDeleteRestoreComment(comment.id, comment.isActive)}
-                              className={`p-2 rounded ${
-                                comment.isActive 
-                                  ? 'text-red-600 hover:bg-red-50' 
-                                  : 'text-green-600 hover:bg-green-50'
-                              }`}
-                              title={comment.isActive ? 'Xóa' : 'Khôi phục'}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="bg-white border-2 border-gray-300 rounded-lg overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-300">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Nội dung</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Bài viết</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Tác giả</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Thống kê</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-300">Trạng thái</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Hành động</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-300">
+                          {comments.map((comment) => (
+                            <tr key={comment.id} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 border-r border-gray-300">
+                                <p className="text-sm line-clamp-2">{truncateText(comment.content, 150)}</p>
+                              </td>
+                              <td className="px-4 py-3 border-r border-gray-300">
+                                <p className="text-sm text-gray-600 line-clamp-1">{comment.postTitle}</p>
+                              </td>
+                              <td className="px-4 py-3 border-r border-gray-300">
+                                <div className="flex items-center gap-2">
+                                  <User className="w-4 h-4 text-gray-400" />
+                                  <div>
+                                    <div className="text-sm font-medium">{comment.userFullname}</div>
+                                    <div className="text-xs text-gray-500">@{comment.username}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 border-r border-gray-300">
+                                <div className="flex gap-3 text-xs text-gray-600">
+                                  <span className="flex items-center gap-1">
+                                    <ThumbsUp className="w-3 h-3" />
+                                    {comment.likesCount || 0}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <MessageSquare className="w-3 h-3" />
+                                    {comment.repliesCount || 0} trả lời
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-center border-r border-gray-300">
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                  comment.isActive ? 'bg-gray-200 text-gray-800' : 'bg-gray-300 text-gray-700'
+                                }`}>
+                                  {comment.isActive ? 'Hoạt động' : 'Đã xóa'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <button
+                                  onClick={() => handleDeleteRestoreComment(comment.id, comment.isActive)}
+                                  className={`p-1.5 rounded transition-colors ${
+                                    comment.isActive 
+                                      ? 'text-gray-700 hover:bg-gray-200' 
+                                      : 'text-gray-600 hover:bg-gray-100'
+                                  }`}
+                                  title={comment.isActive ? 'Xóa' : 'Khôi phục'}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
 
-                  {/* Pagination */}
-                  <div className="mt-4 flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
-                      Hiển thị {comments.length} / {totalElements}
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                        disabled={currentPage === 0 || loading}
-                        className="px-3 py-1 border rounded disabled:opacity-50"
-                      >
-                        Trước
-                      </button>
-                      <span className="px-3 py-1">Trang {currentPage + 1} / {totalPages || 1}</span>
-                      <button
-                        onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-                        disabled={currentPage >= totalPages - 1 || loading}
-                        className="px-3 py-1 border rounded disabled:opacity-50"
-                      >
-                        Sau
-                      </button>
+                    {/* Pagination */}
+                    <div className="px-4 py-3 bg-gray-50 border-t border-gray-300 flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        Hiển thị {comments.length} / {totalElements}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                          disabled={currentPage === 0 || loading}
+                          className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Trước
+                        </button>
+                        <span className="px-3 py-1.5 text-sm text-gray-700">Trang {currentPage + 1} / {totalPages || 1}</span>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                          disabled={currentPage >= totalPages - 1 || loading}
+                          className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Sau
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </>
@@ -481,91 +489,91 @@ const ForumManagement = () => {
               {loading ? (
                 <div className="text-center py-8">Đang tải...</div>
               ) : statistics ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Posts Statistics */}
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-3 bg-blue-600 rounded-lg">
-                        <FileText className="w-6 h-6 text-white" />
+                  <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-2 bg-gray-700 rounded-lg">
+                        <FileText className="w-4 h-4 text-white" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900">Bài viết</h3>
+                      <h3 className="text-sm font-semibold text-gray-900">Bài viết</h3>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Tổng số:</span>
-                        <span className="font-bold text-blue-600">{statistics.totalPosts || 0}</span>
+                        <span className="font-bold text-gray-800">{statistics.totalPosts || 0}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Hoạt động:</span>
-                        <span className="font-bold text-green-600">{statistics.totalActivePosts || 0}</span>
+                        <span className="font-bold text-gray-800">{statistics.totalActivePosts || 0}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Đã xóa:</span>
-                        <span className="font-bold text-red-600">{statistics.totalDeletedPosts || 0}</span>
+                        <span className="font-bold text-gray-700">{statistics.totalDeletedPosts || 0}</span>
                       </div>
-                      <div className="flex justify-between pt-2 border-t">
+                      <div className="flex justify-between text-sm pt-1.5 border-t">
                         <span className="text-gray-600">Hôm nay:</span>
-                        <span className="font-bold text-purple-600">{statistics.postsToday || 0}</span>
+                        <span className="font-bold text-gray-800">{statistics.postsToday || 0}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Comments Statistics */}
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-3 bg-purple-600 rounded-lg">
-                        <MessageSquare className="w-6 h-6 text-white" />
+                  <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-2 bg-gray-700 rounded-lg">
+                        <MessageSquare className="w-4 h-4 text-white" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900">Bình luận</h3>
+                      <h3 className="text-sm font-semibold text-gray-900">Bình luận</h3>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Tổng số:</span>
-                        <span className="font-bold text-purple-600">{statistics.totalComments || 0}</span>
+                        <span className="font-bold text-gray-800">{statistics.totalComments || 0}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Hoạt động:</span>
-                        <span className="font-bold text-green-600">{statistics.totalActiveComments || 0}</span>
+                        <span className="font-bold text-gray-800">{statistics.totalActiveComments || 0}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Đã xóa:</span>
-                        <span className="font-bold text-red-600">{statistics.totalDeletedComments || 0}</span>
+                        <span className="font-bold text-gray-700">{statistics.totalDeletedComments || 0}</span>
                       </div>
-                      <div className="flex justify-between pt-2 border-t">
+                      <div className="flex justify-between text-sm pt-1.5 border-t">
                         <span className="text-gray-600">Hôm nay:</span>
-                        <span className="font-bold text-purple-600">{statistics.commentsToday || 0}</span>
+                        <span className="font-bold text-gray-800">{statistics.commentsToday || 0}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Engagement Statistics */}
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-3 bg-green-600 rounded-lg">
-                        <TrendingUp className="w-6 h-6 text-white" />
+                  <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-2 bg-gray-700 rounded-lg">
+                        <TrendingUp className="w-4 h-4 text-white" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900">Tương tác</h3>
+                      <h3 className="text-sm font-semibold text-gray-900">Tương tác</h3>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Lượt thích:</span>
-                        <span className="font-bold text-green-600">{statistics.totalLikes || 0}</span>
+                        <span className="font-bold text-gray-800">{statistics.totalLikes || 0}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Lượt xem:</span>
-                        <span className="font-bold text-blue-600">{statistics.totalViews || 0}</span>
+                        <span className="font-bold text-gray-800">{statistics.totalViews || 0}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm">
                         <span className="text-gray-600">TB xem/bài:</span>
-                        <span className="font-bold text-purple-600">
+                        <span className="font-bold text-gray-800">
                           {statistics.totalPosts > 0 
                             ? Math.round(statistics.totalViews / statistics.totalPosts) 
                             : 0}
                         </span>
                       </div>
-                      <div className="flex justify-between pt-2 border-t">
+                      <div className="flex justify-between text-sm pt-1.5 border-t">
                         <span className="text-gray-600">TB comment/bài:</span>
-                        <span className="font-bold text-orange-600">
+                        <span className="font-bold text-gray-800">
                           {statistics.totalActivePosts > 0 
                             ? (statistics.totalComments / statistics.totalActivePosts).toFixed(1) 
                             : 0}
@@ -610,7 +618,7 @@ const ForumManagement = () => {
               {selectedPost.tags && selectedPost.tags.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
                   {selectedPost.tags.map((tag, idx) => (
-                    <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
+                    <span key={idx} className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-full">
                       {tag}
                     </span>
                   ))}
@@ -621,26 +629,34 @@ const ForumManagement = () => {
                 <p className="text-gray-700 whitespace-pre-wrap">{selectedPost.content}</p>
               </div>
 
-              <div className="grid grid-cols-4 gap-4 pt-4 border-t">
-                <div className="text-center">
-                  <Eye className="w-5 h-5 mx-auto text-gray-400 mb-1" />
-                  <div className="text-sm text-gray-600">Lượt xem</div>
-                  <div className="text-lg font-bold">{selectedPost.viewCount || 0}</div>
+              <div className="flex items-center justify-center gap-6 pt-3 border-t">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg">
+                  <Eye className="w-4 h-4 text-gray-500" />
+                  <div>
+                    <div className="text-xs text-gray-500">Lượt xem</div>
+                    <div className="text-sm font-bold text-gray-900">{selectedPost.viewCount || 0}</div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <ThumbsUp className="w-5 h-5 mx-auto text-gray-400 mb-1" />
-                  <div className="text-sm text-gray-600">Lượt thích</div>
-                  <div className="text-lg font-bold">{selectedPost.likesCount || 0}</div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+                  <ThumbsUp className="w-4 h-4 text-gray-600" />
+                  <div>
+                    <div className="text-xs text-gray-500">Lượt thích</div>
+                    <div className="text-sm font-bold text-gray-800">{selectedPost.likesCount || 0}</div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <MessageSquare className="w-5 h-5 mx-auto text-gray-400 mb-1" />
-                  <div className="text-sm text-gray-600">Bình luận</div>
-                  <div className="text-lg font-bold">{selectedPost.commentsCount || 0}</div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+                  <MessageSquare className="w-4 h-4 text-gray-600" />
+                  <div>
+                    <div className="text-xs text-gray-500">Bình luận</div>
+                    <div className="text-sm font-bold text-gray-800">{selectedPost.commentsCount || 0}</div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <FileText className="w-5 h-5 mx-auto text-gray-400 mb-1" />
-                  <div className="text-sm text-gray-600">XP Reward</div>
-                  <div className="text-lg font-bold">{selectedPost.xpReward || 0}</div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+                  <FileText className="w-4 h-4 text-gray-600" />
+                  <div>
+                    <div className="text-xs text-gray-500">XP</div>
+                    <div className="text-sm font-bold text-gray-800">{selectedPost.xpReward || 0}</div>
+                  </div>
                 </div>
               </div>
 
@@ -666,8 +682,8 @@ const ForumManagement = () => {
                 }}
                 className={`px-4 py-2 rounded-lg ${
                   selectedPost.isActive
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
+                    ? 'bg-gray-700 hover:bg-gray-800 text-white'
+                    : 'bg-gray-600 hover:bg-gray-700 text-white'
                 }`}
               >
                 {selectedPost.isActive ? 'Xóa bài viết' : 'Khôi phục bài viết'}
