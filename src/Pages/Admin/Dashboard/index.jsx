@@ -39,13 +39,17 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
         const response = await getAdminDashboard();
+        console.log('📊 Admin Dashboard Response:', response);
         if (response.code === 1000) {
+          console.log('✅ Dashboard data loaded:', response.result);
+          console.log('📈 User Growth Data:', response.result?.userGrowthData);
+          console.log('📊 Activity Distribution:', response.result?.activityDistribution);
           setDashboardData(response.result);
         } else {
           setError('Không thể tải dữ liệu dashboard');
         }
       } catch (err) {
-        console.error('Error fetching dashboard:', err);
+        console.error('❌ Error fetching dashboard:', err);
         setError('Có lỗi xảy ra khi tải dữ liệu');
       } finally {
         setLoading(false);
