@@ -34,6 +34,8 @@ import WritingManagement from "./Admin/WritingManagement"
 import ForumManagement from "./Admin/ForumManagement"
 import GrammarLessonManagement from "./Admin/GrammarLessonManagement"
 import ReportManagement from "./Admin/ReportManagement"
+import VocabExerciseManagement from "./Admin/VocabExerciseManagement"
+import GrammarExerciseManagement from "./Admin/GrammarExerciseManagement"
 
 const PublicPage = [
     { path: "/", component: ProtectedLandingPage, layout: UserLayout },
@@ -66,6 +68,8 @@ const PublicPage = [
     { path: "/admin/vocabulary", component: VocabManagement, layout: AdminLayout },
     { path: "/admin/grammar", component: GrammarManagement, layout: AdminLayout },
     { path: "/admin/grammar-lessons", component: GrammarLessonManagement, layout: AdminLayout },
+    { path: "/admin/vocab-exercises", component: VocabExerciseManagement, layout: AdminLayout },
+    { path: "/admin/grammar-exercises", component: GrammarExerciseManagement, layout: AdminLayout },
     { path: "/admin/writing", component: WritingManagement, layout: AdminLayout },
     { path: "/admin/forum", component: ForumManagement, layout: AdminLayout },
     { path: "/admin/reports", component: ReportManagement, layout: AdminLayout }

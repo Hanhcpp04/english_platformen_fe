@@ -45,6 +45,11 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
       path: '/admin/vocabulary',
     },
     {
+      title: 'Bài tập Từ vựng',
+      icon: ClipboardList,
+      path: '/admin/vocab-exercises',
+    },
+    {
       title: 'Quản lý Ngữ pháp',
       icon: GraduationCap,
       path: '/admin/grammar',
@@ -53,6 +58,11 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
       title: 'Bài học Ngữ pháp',
       icon: FileText,
       path: '/admin/grammar-lessons',
+    },
+    {
+      title: 'Bài tập Ngữ pháp',
+      icon: Award,
+      path: '/admin/grammar-exercises',
     },
     {
       title: 'Quản lý Viết',

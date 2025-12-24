@@ -833,3 +833,345 @@ export const importVocabFromExcel = async (topicId, file) => {
     throw err.response?.data || err;
   }
 };
+
+// ==================== VOCAB EXERCISE TYPE MANAGEMENT ====================
+
+/**
+ * Lấy tất cả loại bài tập từ vựng (có phân trang)
+ * @param {number} page - Trang hiện tại (mặc định: 0)
+ * @param {number} size - Số lượng items mỗi trang (mặc định: 10)
+ * @returns {Promise} Page<AdminVocabExerciseTypeResponse>
+ */
+export const getAllVocabExerciseTypes = async (page = 0, size = 10) => {
+  try {
+    const res = await request.get('admin-vocab/exercise-types/getAll', {
+      params: { page, size }
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Tạo loại bài tập từ vựng mới
+ * @param {Object} data - { name, description, instruction, isActive }
+ * @returns {Promise} APIResponse<AdminVocabExerciseTypeResponse>
+ */
+export const createVocabExerciseType = async (data) => {
+  try {
+    const res = await request.post('admin-vocab/exercise-types/create', data);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Cập nhật loại bài tập từ vựng
+ * @param {number} id - Exercise Type ID
+ * @param {Object} data - { name, description, instruction, isActive }
+ * @returns {Promise} APIResponse<AdminVocabExerciseTypeResponse>
+ */
+export const updateVocabExerciseType = async (id, data) => {
+  try {
+    const res = await request.put(`admin-vocab/exercise-types/update/${id}`, data);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Xóa hoặc khôi phục loại bài tập từ vựng
+ * @param {number} id - Exercise Type ID
+ * @param {string} status - "delete" hoặc "restore"
+ * @returns {Promise} APIResponse<AdminVocabExerciseTypeResponse>
+ */
+export const deleteOrRestoreVocabExerciseType = async (id, status) => {
+  try {
+    const res = await request.put(`admin-vocab/exercise-types/delete-restore/${id}/${status}`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+// ==================== VOCAB EXERCISE QUESTION MANAGEMENT ====================
+
+/**
+ * Lấy tất cả câu hỏi bài tập từ vựng (có phân trang)
+ * @param {number} page - Trang hiện tại (mặc định: 0)
+ * @param {number} size - Số lượng items mỗi trang (mặc định: 10)
+ * @returns {Promise} Page<AdminVocabExerciseQuestionResponse>
+ */
+export const getAllVocabExerciseQuestions = async (page = 0, size = 10) => {
+  try {
+    const res = await request.get('admin-vocab/exercise-questions/getAll', {
+      params: { page, size }
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Lấy câu hỏi theo loại bài tập
+ * @param {number} typeId - Exercise Type ID
+ * @param {number} page - Trang hiện tại (mặc định: 0)
+ * @param {number} size - Số lượng items mỗi trang (mặc định: 10)
+ * @returns {Promise} Page<AdminVocabExerciseQuestionResponse>
+ */
+export const getVocabExerciseQuestionsByType = async (typeId, page = 0, size = 10) => {
+  try {
+    const res = await request.get(`admin-vocab/exercise-questions/by-type/${typeId}`, {
+      params: { page, size }
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Lấy câu hỏi theo topic
+ * @param {number} topicId - Topic ID
+ * @param {number} page - Trang hiện tại (mặc định: 0)
+ * @param {number} size - Số lượng items mỗi trang (mặc định: 10)
+ * @returns {Promise} Page<AdminVocabExerciseQuestionResponse>
+ */
+export const getVocabExerciseQuestionsByTopic = async (topicId, page = 0, size = 10) => {
+  try {
+    const res = await request.get(`admin-vocab/exercise-questions/by-topic/${topicId}`, {
+      params: { page, size }
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Tạo câu hỏi bài tập từ vựng mới
+ * @param {Object} data - { typeId, topicId, question, options, correctAnswer, explanation, xpReward, isActive }
+ * @returns {Promise} APIResponse<AdminVocabExerciseQuestionResponse>
+ */
+export const createVocabExerciseQuestion = async (data) => {
+  try {
+    const res = await request.post('admin-vocab/exercise-questions/create', data);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Cập nhật câu hỏi bài tập từ vựng
+ * @param {number} id - Question ID
+ * @param {Object} data - { typeId, topicId, question, options, correctAnswer, explanation, xpReward, isActive }
+ * @returns {Promise} APIResponse<AdminVocabExerciseQuestionResponse>
+ */
+export const updateVocabExerciseQuestion = async (id, data) => {
+  try {
+    const res = await request.put(`admin-vocab/exercise-questions/update/${id}`, data);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Xóa hoặc khôi phục câu hỏi bài tập từ vựng
+ * @param {number} id - Question ID
+ * @param {string} status - "delete" hoặc "restore"
+ * @returns {Promise} APIResponse<AdminVocabExerciseQuestionResponse>
+ */
+export const deleteOrRestoreVocabExerciseQuestion = async (id, status) => {
+  try {
+    const res = await request.put(`admin-vocab/exercise-questions/delete-restore/${id}/${status}`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+// ==================== GRAMMAR EXERCISE TYPE MANAGEMENT ====================
+
+/**
+ * Lấy tất cả loại bài tập ngữ pháp (có phân trang)
+ * @param {number} page - Trang hiện tại (mặc định: 0)
+ * @param {number} size - Số lượng items mỗi trang (mặc định: 10)
+ * @returns {Promise} Page<AdminExerciseGrammarTypeResponse>
+ */
+export const getAllGrammarExerciseTypes = async (page = 0, size = 10) => {
+  try {
+    const res = await request.get('admin-grammar/exercise-types/getAll', {
+      params: { page, size }
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Lấy loại bài tập ngữ pháp theo topic
+ * @param {number} topicId - Topic ID
+ * @param {number} page - Trang hiện tại (mặc định: 0)
+ * @param {number} size - Số lượng items mỗi trang (mặc định: 10)
+ * @returns {Promise} Page<AdminExerciseGrammarTypeResponse>
+ */
+export const getGrammarExerciseTypesByTopic = async (topicId, page = 0, size = 10) => {
+  try {
+    const res = await request.get(`admin-grammar/exercise-types/by-topic/${topicId}`, {
+      params: { page, size }
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Tạo loại bài tập ngữ pháp mới
+ * @param {Object} data - { topicId, name, description, isActive }
+ * @returns {Promise} APIResponse<AdminExerciseGrammarTypeResponse>
+ */
+export const createGrammarExerciseType = async (data) => {
+  try {
+    const res = await request.post('admin-grammar/exercise-types/create', data);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Cập nhật loại bài tập ngữ pháp
+ * @param {number} id - Exercise Type ID
+ * @param {Object} data - { topicId, name, description, isActive }
+ * @returns {Promise} APIResponse<AdminExerciseGrammarTypeResponse>
+ */
+export const updateGrammarExerciseType = async (id, data) => {
+  try {
+    const res = await request.put(`admin-grammar/exercise-types/update/${id}`, data);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Xóa hoặc khôi phục loại bài tập ngữ pháp
+ * @param {number} id - Exercise Type ID
+ * @param {string} status - "delete" hoặc "restore"
+ * @returns {Promise} APIResponse<AdminExerciseGrammarTypeResponse>
+ */
+export const deleteOrRestoreGrammarExerciseType = async (id, status) => {
+  try {
+    const res = await request.put(`admin-grammar/exercise-types/delete-restore/${id}/${status}`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+// ==================== GRAMMAR EXERCISE QUESTION MANAGEMENT ====================
+
+/**
+ * Lấy tất cả câu hỏi bài tập ngữ pháp (có phân trang)
+ * @param {number} page - Trang hiện tại (mặc định: 0)
+ * @param {number} size - Số lượng items mỗi trang (mặc định: 10)
+ * @returns {Promise} Page<AdminGrammarQuestionResponse>
+ */
+export const getAllGrammarExerciseQuestions = async (page = 0, size = 10) => {
+  try {
+    const res = await request.get('admin-grammar/exercise-questions/getAll', {
+      params: { page, size }
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Lấy câu hỏi theo loại bài tập ngữ pháp
+ * @param {number} typeId - Exercise Type ID
+ * @param {number} page - Trang hiện tại (mặc định: 0)
+ * @param {number} size - Số lượng items mỗi trang (mặc định: 10)
+ * @returns {Promise} Page<AdminGrammarQuestionResponse>
+ */
+export const getGrammarExerciseQuestionsByType = async (typeId, page = 0, size = 10) => {
+  try {
+    const res = await request.get(`admin-grammar/exercise-questions/by-type/${typeId}`, {
+      params: { page, size }
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Lấy câu hỏi theo lesson
+ * @param {number} lessonId - Lesson ID
+ * @param {number} page - Trang hiện tại (mặc định: 0)
+ * @param {number} size - Số lượng items mỗi trang (mặc định: 10)
+ * @returns {Promise} Page<AdminGrammarQuestionResponse>
+ */
+export const getGrammarExerciseQuestionsByLesson = async (lessonId, page = 0, size = 10) => {
+  try {
+    const res = await request.get(`admin-grammar/exercise-questions/by-lesson/${lessonId}`, {
+      params: { page, size }
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Tạo câu hỏi bài tập ngữ pháp mới
+ * @param {Object} data - { lessonId, typeId, question, options, correctAnswer, xpReward, isActive }
+ * @returns {Promise} APIResponse<AdminGrammarQuestionResponse>
+ */
+export const createGrammarExerciseQuestion = async (data) => {
+  try {
+    const res = await request.post('admin-grammar/exercise-questions/create', data);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Cập nhật câu hỏi bài tập ngữ pháp
+ * @param {number} id - Question ID
+ * @param {Object} data - { lessonId, typeId, question, options, correctAnswer, xpReward, isActive }
+ * @returns {Promise} APIResponse<AdminGrammarQuestionResponse>
+ */
+export const updateGrammarExerciseQuestion = async (id, data) => {
+  try {
+    const res = await request.put(`admin-grammar/exercise-questions/update/${id}`, data);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+/**
+ * Xóa hoặc khôi phục câu hỏi bài tập ngữ pháp
+ * @param {number} id - Question ID
+ * @param {string} status - "delete" hoặc "restore"
+ * @returns {Promise} APIResponse<AdminGrammarQuestionResponse>
+ */
+export const deleteOrRestoreGrammarExerciseQuestion = async (id, status) => {
+  try {
+    const res = await request.put(`admin-grammar/exercise-questions/delete-restore/${id}/${status}`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
