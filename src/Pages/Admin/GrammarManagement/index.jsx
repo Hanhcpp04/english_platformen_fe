@@ -41,10 +41,12 @@ const GrammarManagement = () => {
 
   useEffect(() => {
     fetchTopics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   useEffect(() => {
     filterTopics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, topics]);
 
   const fetchTopics = async () => {

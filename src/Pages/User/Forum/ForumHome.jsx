@@ -20,7 +20,6 @@ import {
 
 export default function ForumHome() {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Forum statistics
   const stats = {
@@ -75,12 +74,6 @@ export default function ForumHome() {
     { name: "Writing", icon: FileText, count: 287 },
     { name: "Listening", icon: Zap, count: 198 }
   ];
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      navigate(`/forum/search?q=${encodeURIComponent(searchQuery)}`);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -102,6 +102,7 @@ const ReportManagement = () => {
     };
 
     fetchReportTypes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleExportReport = async () => {

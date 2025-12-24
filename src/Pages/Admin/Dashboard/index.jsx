@@ -83,9 +83,9 @@ const AdminDashboard = () => {
   const recentActivities = dashboardData?.recentActivities || [];
 
   // add mounted flag to avoid rendering ResponsiveContainer before client mount
-  const [mounted, setMounted] = useState(false);
+  const [_mounted, _setMounted] = useState(false);
   useEffect(() => {
-    setMounted(true);
+    _setMounted(true);
   }, []);
 
   // ChartWrapper: đo chiều rộng container bằng ResizeObserver, render chart khi width > 0

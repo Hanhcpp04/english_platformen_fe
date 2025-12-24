@@ -40,6 +40,7 @@ const ForumManagement = () => {
     } else if (activeTab === 'statistics') {
       fetchStatistics();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, currentPage, statusFilter, searchQuery]);
 
   const fetchPosts = async () => {

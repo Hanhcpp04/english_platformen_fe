@@ -107,7 +107,7 @@ const LandingPage = () => {
     },
   ];
 
-  const learningPaths = [
+  const _learningPaths = [
     {
       level: 'Beginner',
       title: 'Cơ bản',

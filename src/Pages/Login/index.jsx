@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 
 
 const Login = () => {
-  const [error, setError] = useState("");
+  const [_error, _setError] = useState("");
   const [formData, setFormData] = useState({
     email: '',
     password: '',

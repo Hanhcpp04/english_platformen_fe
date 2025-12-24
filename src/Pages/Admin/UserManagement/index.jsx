@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, 
   Edit, 
@@ -24,11 +24,11 @@ const UserManagement = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [editingUser, setEditingUser] = useState(null);
+  const [pageSize, _setPageSize] = useState(10);
+  const [_editingUser, _setEditingUser] = useState(null);
 
   // Fetch users từ API
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const response = await adminService.getAllUsers(currentPage, pageSize);
@@ -43,11 +43,11 @@ const UserManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, pageSize]);
+  }, [fetchUsers]);
 
   // Toggle active/inactive
   const handleToggleActive = async (userId, currentStatus) => {

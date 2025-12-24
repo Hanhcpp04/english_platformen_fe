@@ -15,7 +15,7 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [_error, _setError] = useState('');
   const [errors, setErrors] = useState({
     fullname: '',
     email: '',
@@ -106,7 +106,6 @@ const Register = () => {
 
   const validateStep = (step) => {
     let isValid = true;
-    const newErrors = { ...errors };
     
     if (step === 1) {
       // Validate step 1 fields

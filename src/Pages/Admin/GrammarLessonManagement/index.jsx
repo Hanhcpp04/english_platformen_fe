@@ -47,6 +47,7 @@ const GrammarLessonManagement = () => {
     if (selectedTopic) {
       fetchLessons();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTopic, currentPage]);
 
   const fetchTopics = async () => {
